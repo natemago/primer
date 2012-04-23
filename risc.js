@@ -108,7 +108,18 @@
    +--------+  +--------+--------+--------+--------+--------+--------+--------+--------+--------+
    | <none> |  | <none> | <none> |ELR_hyp | <none> | <none> | <none> | <none> | <none> | <none> |
    +--------+  +--------+--------+--------+--------+--------+--------+--------+--------+--------+
-
+   
+   Naming:
+      R0-R12  - genral purpose registers - in all modes, some are specific to
+                mode, but all of them regardless of mode are general purpose 
+                registers.
+      SP      - Stack Pointer
+      LR      - Link Register
+      PC      - Program Counter
+      CPSR    - Current Program Status Register
+      SPSR    - Saved Program Status Register
+   
+   
    */
    
    
