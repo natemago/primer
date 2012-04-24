@@ -328,22 +328,50 @@
    
    
    
-   var Monitor = function(el){
-      this.el = $('<div class="monitor"></div>')[0];
-      el.appendChild(this.el);
-      this.message = '';
-   };
-   
-   libDraw.tools.extend(Monitor, {
-      print: function(){
-         for(var i = 0; i < arguments.length; i++){
-            
+   var PropertyMonitor = function(cfg){
+       var holder = cfg.holder || document.body;
+       var watch = cfg.watch || [];
+       var interval = cfg.interval || 1000;
+       var self = this;
+       
+       
+       for(var i = 0; i < watch.length; i++){
+         watch[i].monitor = function(){
+            var target = this.target || window;
+            var params = this.params || [];
+            var value = undefined;
+            try{
+               if( typeof(this.property) == 'string' ){
+                  var v = target[this.property];
+                  if( typeof(v) == 'function'){
+                     value = v.apply(target, params);
+                  }else{
+                     value = v;
+                  }
+               }else if( typeof(this.property) == 'function'){
+                  value = this.property.apply(target, params);
+               }
+               self.update(this.id, value);
+            }catch(e){
+               self.error(this.id, e.message);
+            }
          }
-      }
+       }
+       
+       this.clock = PropertyMonitor.__CLOCK_POOL[interval];
+       if(!this.clock){
+         this.clock = new libDraw.pkg.timer.Clock({
+            interval: interval,
+            mode: 'interval'
+         });
+         PropertyMonitor.__CLOCK_POOL[interval] = this.clock;
+       }
+       this.clock.addHandler(this.__doWatch, this);
+   };   
+   
+   libDraw.ext(PropertyMonitor, {
+      
    });
-   
-   
-   
    
    
    
@@ -353,7 +381,7 @@
       var interval = 50; // ~20Hz
       var mode = 'interval'; // 
       var insCnt = 1000; // instructions count per cycle
-      var fac = 10000;
+      var fac = 100;
       var threshold = 0.1;
       
       var c1 = new libDraw.pkg.timer.Clock({
