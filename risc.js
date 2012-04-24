@@ -334,11 +334,16 @@
        var interval = cfg.interval || 1000;
        var self = this;
        
+       this.watched = {};
+       
+       this.el = $('<div class="monitor-wrapper"></div>')[0];
+       $(holder).append(this.el);
        
        for(var i = 0; i < watch.length; i++){
          watch[i].monitor = function(){
             var target = this.target || window;
             var params = this.params || [];
+            var label = this.label || this.id;
             var value = undefined;
             try{
                if( typeof(this.property) == 'string' ){
@@ -351,11 +356,22 @@
                }else if( typeof(this.property) == 'function'){
                   value = this.property.apply(target, params);
                }
-               self.update(this.id, value);
+               self.update(this.id,label, value);
             }catch(e){
-               self.error(this.id, e.message);
+               self.error(this.id,label, e.message);
             }
          }
+         watch[i].id = libDraw.getId('mon');
+         var ww = $([
+            '<div class="monitor-entry">',
+               '<span class="monitor-label"></span>',
+               '<span class="monitor-value"></span>',
+            '</div>'
+         ].join(''));
+         watch[i].labelEl = $('.monitor-label',ww)[0];
+         watch[i].valueEl = $('.monitor-value',ww)[0];
+         this.watched[watch[i].id] = watch[i];
+         $(this.el).append(ww);
        }
        
        this.clock = PropertyMonitor.__CLOCK_POOL[interval];
@@ -366,11 +382,29 @@
          });
          PropertyMonitor.__CLOCK_POOL[interval] = this.clock;
        }
-       this.clock.addHandler(this.__doWatch, this);
+       this.clock.addHandler(function(){
+          for(var  i = 0; i < watch.length; i++){
+             watch[i].monitor();
+          }
+       }, this);
+       
    };   
    
    libDraw.ext(PropertyMonitor, {
-      
+      update: function(id, label, value){
+         var w = this.watched[id];
+         if(w){
+            w.labelEl.innerHTML = label;
+            w.valueEl.ihherHTML = value;
+         }
+      },
+      error: function(id, label, value){
+         var w = this.watched[id];
+         if(w){
+            w.labelEl.innerHTML = label;
+            w.valueEl.ihherHTML = '<span class="monitor-error">'+value+"</span>";
+         }
+      }
    });
    
    
@@ -381,7 +415,7 @@
       var interval = 50; // ~20Hz
       var mode = 'interval'; // 
       var insCnt = 1000; // instructions count per cycle
-      var fac = 100;
+      var fac = 10000;
       var threshold = 0.1;
       
       var c1 = new libDraw.pkg.timer.Clock({
