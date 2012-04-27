@@ -1,6 +1,27 @@
 .monitor-wrapper{
-   background: #002975;
-   color: #fff;
+   background: #3b3b3b;
+   color: #0076FF;
    padding: 3px;
+   font: 12px sans-serif;
+}
+/* 
+light blue: 0076FF 
+orange: #FFC500
+gray: 3b3b3b
+black: 000
+light-gray: b3b3b3
+*/
+
+.monitor-name{
+   color: #b3b3b3;
+   font-weight: bold;
+}
+
+.monitor-label{
+   font-weight: bold;
+}
+
+.monitor-value{
+   color: b3b3b3;
 }
 
