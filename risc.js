@@ -18,14 +18,16 @@
       
       this.PC = 0;
       
-      
+      this.clock.addHandler(this.cycle,this);
    };
    libDraw.ext(CPU,{
       cycle: function(tick){
          var instr = 0;
-         for(var i = 0; i < this.instructionsCount; i++){
-            instr = this.M[this.PC]; // fetch
-            this.execInstr(instr);
+         var ic = this.instructionsCount;
+         var PC = this.PC;
+         var M = this.M;
+         for(var i = 0; i < ic; i++){
+            instr = M[PC]; // fetch
          }
       },
       execInstr: function(instr){
@@ -123,7 +125,7 @@
    */
    
    
-   var ARMv7_CPU = function(){
+   var ARMv7_CPU = function(config){
       var R = new Int32Array(45);
       R.set([
       
@@ -309,8 +311,31 @@
       };
       
       this.modes = M;
-      ARMv7_CPU.superclass.constructor.call(this, "memory", R, "instructions", "clock", 1000);
       
+      
+      var T = 0xFFFFFFFF;
+      var A = 0;
+      var B = 0;
+      this.cycle = function(){
+         var instr = 0;
+         var ic = this.instructionsCount;
+         var PC = this.PC;
+         var M = this.M;
+         for(var i = 0; i < ic; i++){
+            A++;
+            A&=T;
+            this.c = A;
+            if(!(A>B)){
+               console.log('CPU-HALT! ERROR',A,B);
+               cpu.turnOff();
+               throw new Error('CPU HALTED! ERROR');
+            }
+            B=A;
+         }
+      };
+      
+      ARMv7_CPU.superclass.constructor.call(this, "memory", R, 
+         "instructions", config.clock, config.instructionsPerCycle);
    };
    
    
@@ -318,7 +343,7 @@
    libDraw.ext(ARMv7_CPU, CPU);
    
    
-   armv7 = new ARMv7_CPU();
+   
    
    
    
@@ -333,14 +358,13 @@
        var watch = cfg.watch || [];
        var interval = cfg.interval || 1000;
        var self = this;
-       
        this.watched = {};
        
        this.el = $('<div class="monitor-wrapper"></div>')[0];
        $(holder).append(this.el);
-       
        for(var i = 0; i < watch.length; i++){
          watch[i].monitor = function(){
+            
             var target = this.target || window;
             var params = this.params || [];
             var label = this.label || this.id;
@@ -384,18 +408,20 @@
        }
        this.clock.addHandler(function(){
           for(var  i = 0; i < watch.length; i++){
-             watch[i].monitor();
+             watch[i].monitor.call(watch[i]);
           }
        }, this);
        
    };   
+   
+   PropertyMonitor.__CLOCK_POOL={};
    
    libDraw.ext(PropertyMonitor, {
       update: function(id, label, value){
          var w = this.watched[id];
          if(w){
             w.labelEl.innerHTML = label;
-            w.valueEl.ihherHTML = value;
+            w.valueEl.innerHTML = value;
          }
       },
       error: function(id, label, value){
@@ -404,8 +430,14 @@
             w.labelEl.innerHTML = label;
             w.valueEl.ihherHTML = '<span class="monitor-error">'+value+"</span>";
          }
+      },
+      watch: function(){
+         if(!this.clock.started){
+            this.clock.start();
+         }
       }
    });
+   
    
    
    
@@ -420,60 +452,77 @@
       
       var c1 = new libDraw.pkg.timer.Clock({
          interval:interval,
-         mode: mode
+         mode: mode,
+         range: 100
       });
       
       
-      var A=100,B=200;
-      c1.addHandler(function(){
-         for(var i = 0; i < insCnt; i++){
-            A=(A+B)%B;
-            A=(A+B)%B;
-            A=(A+B)%B;
-            A=(A+B)%B;
-            if(A>100)
-               A=(A+B)%B;
-         }
+      
+      cpu = new ARMv7_CPU({
+         clock: c1,
+         instructionsPerCycle: 20000
       });
       
-      
-      var mc = new libDraw.pkg.timer.Clock({
-         interval: 1000/3, // ~3Hz
-         mode: 'interval'
-      });
-      
-      mc.addHandler(function(){
-         var m = c1.getMeasure();
-         var mips = ( (m.frequency||0) * insCnt)/1000000;
-         M.clear();
-         M.print('MIPS: ',mips,'<br/>');
-         M.print('Freq: ',(m.frequency||0).toFixed(2),'Hz<br/>');
-         M.print(' IpC: ',insCnt,'<br/>');
-         M.print(' Usg: ',(m.usage? m.usage.usage*100:'NA'),'%<br/>');
-         if(m.usage){
-            if(m.usage.usage < threshold){
-               insCnt+=fac;
-            }else if(m.usage.usage > threshold){
-               insCnt-=(fac/2);
+      var maxUsage = 0.8;
+      var a = 0;
+      cpu.turnOn();
+      mon = new PropertyMonitor({
+         holder: $('#monitor')[0],
+         interval: 1000/8,
+         watch: [
+            {
+               target: cpu,
+               label: 'SPEED: ',
+               property: function(){
+                  return (this.getSpeed()/1000000) + 'MIPS';
+               }
+            },
+            {
+               target: cpu,
+               label: 'USAGE: ',
+               property: function(){
+                  return (this.getUsage()*100).toFixed(2) + "%";
+               }
+            },
+            {
+               target: cpu,
+               label: 'TICKS (e9): ',
+               property: function(){
+                  return (this.c/1000000000);
+               }
+            },
+            {
+               target: cpu,
+               label: 'Fix: ',
+               property: function(){
+                  var ic = this.instructionsCount;
+                  var usage = this.getUsage();
+                  var val = '';//'['+usage+']';
+                  
+                  if(usage > 0){
+                     var fix = Math.floor(((maxUsage-usage)/maxUsage) * ic);
+                    // if(fix > 5000)
+                    //    fix = 5000;
+                    // else if(fix < -5000)
+                    //    fix = -5000;
+                        
+                    // this.instructionsCount +=fix;
+                     val += fix;
+                     if(fix > 0){
+                        val+='&uarr;';
+                     }else{
+                        val +='&darr;';
+                     }
+                  }else{
+                     val+='no-fix';
+                  }
+                  return val;
+               }
             }
-         }
+         ]
       });
       
       
-      c1.start();
-      mc.start();
-      
-      
-      M = {
-         div: $('#monitor')[0],
-         clear: function(){M.div.innerHTML = '';},
-         print: function(){
-            var m = '';
-            for(var i = 0; i < arguments.length; i++){
-               m+=arguments[i];
-            }
-            M.div.innerHTML+=m;
-         }
-      };
+      mon.watch();
    });
 })(jQuery);
