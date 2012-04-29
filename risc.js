@@ -30,7 +30,7 @@
                instr = M[PC]; // fetch
                this.execInstr(instr);
                console.log(ds.instructionToString(instr));
-               console.log(helpers.memToHex(cpu.M).join('\n'));
+               //console.log(helpers.memToHex(cpu.M).join('\n'));
             }
          }catch(e){
             console.log(e);
@@ -583,16 +583,7 @@
          interval: config.loopInterval,
          range: config.sampleInterval || 100
       });
-      DummyCPU.superclass.constructor.call(
-         this,
-         
-         
-         new Int32Array(config.memorySize),
-         new Int32Array(8),
-         [],
-         clock,
-         config.instructionsCount
-      );
+      
       
       var inst = 0x0, r1=0x0,r2=0x0,r3=0x0,v=0x0, result=0x0;
       var INS_MASK     =0xF0000000,
@@ -609,186 +600,216 @@
           X_FLAG_MASK  =0x00000008,
           NX_FLAG_MASK =0xFFFFFFF7,  
           MAX_MASK     =0xFFFFFFFF;
-      var R = this.R;
+      var R = [];//this.R;
       var PC = 0x4,
           SR = 0x5,
           DI = 0x6,
           DO = 0x7;
-      
-      this.execInstr = function(instr){
-         inst=(instr>>28)&0xF;
-         r1  =(instr>>25)&0x7;
-         r2  =(instr>>22)&0x7;
-         r3  =(instr>>19)&0x7;
-         v   =(instr&VAL_MASK);
-         switch(inst){
-            case 0x0: // 0000  (0) - OR  <R1> <R2> <R3> - bitwise OR: R3=R1|R2
-               result = R[r1]|R[r2];
-               // set zero flag
-               if(result)
-                  R[SR] &= NZ_FLAG_MASK;
-               else
-                  R[SR] |= Z_FLAG_MASK;
+      var instr = 0;
+      this.cycle = function(tick){
+         
+         var ic = this.instructionsCount;
+         var M = this.M;
+         var R = this.R;
+         try{
+            for(var i = 0; i < ic; i++){
                
-               R[r3] = (result&MAX_MASK);
-               break;
-            case 0x1: // 0001  (1) - MVI <R> V - move immediate to register <R> value: 
-               R[r1]=v;
-               break;
-            case 0x2: // 0010  (2) - MOV <R1> <R2> - move <R2> to <R1>
-               R[r1] = R[r2];
-               break;
-            case 0x3: // 0011  (3) - ADD <R1> <R2> <R3> - add R2 to R1 and save to R3
-               result = R[r1]+R[r2];
-               // set zero flag
-               if(result)
-                  R[SR] &= NZ_FLAG_MASK;
-               else
-                  R[SR] |= Z_FLAG_MASK;
-               
-               // set carry flag
-               if(R[r1]|R[r2])
-                  R[SR] |= C_FLAG_MASK;
-               else
-                  R[SR] &= NC_FLAG_MASK;
-                  
-               // set overflow flag
-               if(result > MAX_MASK)
-                  R[SR] |= O_FLAG_MASK;
-               else
-                  R[SR] &= NO_FLAG_MASK;
-                  
-               R[r3] = (result&MAX_MASK);
-               break;
-            case 0x4: // 0100  (4) - SUB <R1> <R2> <R3> - subtract R1 from R2 and store to R3
-               result = R[r2]-R[r1];
-               // set zero flag
-               if(result)
-                  R[SR] &= NZ_FLAG_MASK;
-               else
-                  R[SR] |= Z_FLAG_MASK;
-                  
-               // set overflow flag - here underflow
-               if(result < 0)
-                  R[SR] |= O_FLAG_MASK;
-               else
-                  R[SR] &= NO_FLAG_MASK;
-                  
-               R[r3] = (result&MAX_MASK);
-               break;
-            case 0x5: // 0101  (5) - SR  <R1> <R2> <R3>- shift right R1 for R2 places and store to R3
-               result = R[r1]>>(R[r2]&0x1f);
-               // set zero flag
-              if(result)
-                  R[SR] &= NZ_FLAG_MASK;
-               else
-                  R[SR] |= Z_FLAG_MASK;
-                  
-               R[r3] = (result&MAX_MASK);
-               break;
-            case 0x6: // (6) - SL  <R1> <R2> <R3>- shift left R1 for R2 places and store to R3
-               result = R[r1]<<(R[r2]&0x1f);
-               // set zero flag
-               if(result)
-                  R[SR] &= NZ_FLAG_MASK;
-               else
-                  R[SR] |= Z_FLAG_MASK;
-                  
-               R[r3] = (result&MAX_MASK);
-               break;
-            case 0x7: // (7) - LOAD <R>          - load from memory address pointed in register DI (6) into R
-               R[r1]=this.M[R[DI]];
-               break;
-            case 0x8: // 1000  (8) - STORE <R>         - save the value from R into memory address pointed in DO (7)
-               this.M[R[DO]] = R[r1];
-               break;
-            case 0x9: // 1001  (9) - JZ   <R>          - if ZERO flag == 1, jump to memory location stored in <R>
-               if(R[SR]&&Z_FLAG_MASK ){
-                  R[PC] = R[r1];
-                  this.PC = R[PC];
-                  return;
+               instr = M[R[PC]];
+               inst=(instr>>28)&0xF;
+               r1  =(instr>>25)&0x7;
+               r2  =(instr>>22)&0x7;
+               r3  =(instr>>19)&0x7;
+               v   =(instr&VAL_MASK);
+               switch(inst){
+                  case 0x0: // 0000  (0) - OR  <R1> <R2> <R3> - bitwise OR: R3=R1|R2
+                     result = R[r1]|R[r2];
+                     // set zero flag
+                     if(result)
+                        R[SR] &= NZ_FLAG_MASK;
+                     else
+                        R[SR] |= Z_FLAG_MASK;
+                     
+                     R[r3] = (result&MAX_MASK);
+                     break;
+                  case 0x1: // 0001  (1) - MVI <R> V - move immediate to register <R> value: 
+                     R[r1]=v;
+                     break;
+                  case 0x2: // 0010  (2) - MOV <R1> <R2> - move <R2> to <R1>
+                     R[r1] = R[r2];
+                     break;
+                  case 0x3: // 0011  (3) - ADD <R1> <R2> <R3> - add R2 to R1 and save to R3
+                     result = R[r1]+R[r2];
+                     // set zero flag
+                     if(result)
+                        R[SR] &= NZ_FLAG_MASK;
+                     else
+                        R[SR] |= Z_FLAG_MASK;
+                     
+                     // set carry flag
+                     if(R[r1]|R[r2])
+                        R[SR] |= C_FLAG_MASK;
+                     else
+                        R[SR] &= NC_FLAG_MASK;
+                        
+                     // set overflow flag
+                     if(result > MAX_MASK)
+                        R[SR] |= O_FLAG_MASK;
+                     else
+                        R[SR] &= NO_FLAG_MASK;
+                        
+                     R[r3] = (result&MAX_MASK);
+                     break;
+                  case 0x4: // 0100  (4) - SUB <R1> <R2> <R3> - subtract R1 from R2 and store to R3
+                     result = R[r2]-R[r1];
+                     // set zero flag
+                     if(result)
+                        R[SR] &= NZ_FLAG_MASK;
+                     else
+                        R[SR] |= Z_FLAG_MASK;
+                        
+                     // set overflow flag - here underflow
+                     if(result < 0)
+                        R[SR] |= O_FLAG_MASK;
+                     else
+                        R[SR] &= NO_FLAG_MASK;
+                        
+                     R[r3] = (result&MAX_MASK);
+                     break;
+                  case 0x5: // 0101  (5) - SR  <R1> <R2> <R3>- shift right R1 for R2 places and store to R3
+                     result = R[r1]>>(R[r2]&0x1f);
+                     // set zero flag
+                    if(result)
+                        R[SR] &= NZ_FLAG_MASK;
+                     else
+                        R[SR] |= Z_FLAG_MASK;
+                        
+                     R[r3] = (result&MAX_MASK);
+                     break;
+                  case 0x6: // (6) - SL  <R1> <R2> <R3>- shift left R1 for R2 places and store to R3
+                     result = R[r1]<<(R[r2]&0x1f);
+                     // set zero flag
+                     if(result)
+                        R[SR] &= NZ_FLAG_MASK;
+                     else
+                        R[SR] |= Z_FLAG_MASK;
+                        
+                     R[r3] = (result&MAX_MASK);
+                     break;
+                  case 0x7: // (7) - LOAD <R>          - load from memory address pointed in register DI (6) into R
+                     R[r1]=this.M[R[DI]];
+                     break;
+                  case 0x8: // 1000  (8) - STORE <R>         - save the value from R into memory address pointed in DO (7)
+                     this.M[R[DO]] = R[r1];
+                     break;
+                  case 0x9: // 1001  (9) - JZ   <R>          - if ZERO flag == 1, jump to memory location stored in <R>
+                     if(R[SR]&&Z_FLAG_MASK ){
+                        R[PC] = R[r1];
+                        this.PC = R[PC];
+                        continue;
+                     }
+                     break;
+                  case 0xA: // 1010  (A) - NOT <R1>  <R2>     - bitwise negation of R1 and store to R2 (R2=~R1)
+                     result = ~R[r1];
+                     // set zero flag
+                     if(result)
+                        R[SR] &= NZ_FLAG_MASK;
+                     else
+                        R[SR] |= Z_FLAG_MASK;
+                        
+                     R[r2] = (result&MAX_MASK);
+                     break;
+                  case 0xB: // 1011  (B) - MUL <R1> <R2> <R3> - multiply R1 with R2 and store to R3
+                     result = R[r1]*R[r2];
+                     // set zero flag
+                     if(result)
+                        R[SR] &= NZ_FLAG_MASK;
+                     else
+                        R[SR] |= Z_FLAG_MASK;
+                     
+                        
+                     // set overflow flag
+                     if(result > MAX_MASK)
+                        R[SR] |= O_FLAG_MASK;
+                     else
+                        R[SR] &= NO_FLAG_MASK;
+                        
+                     R[r3] = (result&MAX_MASK);
+                     break;
+                  case 0xC: // 1100  (C) - DIV <R1> <R2> <R3> - divide R2 by R1 and store to R3
+                     if(R[r2] == 0){
+                        // divide by zero ... set exception flag
+                        R[SR] |= X_FLAG_MASK;
+                        break;
+                     }else{
+                        R[SR] &= NX_FLAG_MASK;
+                     }
+                     result = Math.floor(R[r1]/R[r2]);
+                     // set zero flag
+                     if(result)
+                        R[SR] &= NZ_FLAG_MASK;
+                     else
+                        R[SR] |= Z_FLAG_MASK;
+                        
+                     R[r3] = (result&MAX_MASK);
+                     break;
+                  case 0xD: //  1101  (D) - XOR <R1> <R2> <R3> - bitwise XOR: R3=R1^R2
+                     result = R[r1]^R[r2];
+                     // set zero flag
+                     if(result)
+                        R[SR] &= NZ_FLAG_MASK;
+                     else
+                        R[SR] |= Z_FLAG_MASK;
+                        
+                     R[r3] = (result&MAX_MASK);
+                     break;
+                  case 0xE: // 1110  (E) - AND <R1> <R2> <R3> - bitwise AND: R3=R1&R2
+                     result = R[r1]&R[r2];
+                     // set zero flag
+                     if(result)
+                        R[SR] &= NZ_FLAG_MASK;
+                     else
+                        R[SR] |= Z_FLAG_MASK;
+                        
+                     R[r3] = (result&MAX_MASK);
+                     break;
+                  case 0xF: //  1111  (F) - HLT               - halt
+                     this.turnOff();
+                     this.halt('HLT');
+                     continue;
+       
                }
-               break;
-            case 0xA: // 1010  (A) - NOT <R1>  <R2>     - bitwise negation of R1 and store to R2 (R2=~R1)
-               result = ~R[r1];
-               // set zero flag
-               if(result)
-                  R[SR] &= NZ_FLAG_MASK;
-               else
-                  R[SR] |= Z_FLAG_MASK;
-                  
-               R[r2] = (result&MAX_MASK);
-               break;
-            case 0xB: // 1011  (B) - MUL <R1> <R2> <R3> - multiply R1 with R2 and store to R3
-               result = R[r1]*R[r2];
-               // set zero flag
-               if(result)
-                  R[SR] &= NZ_FLAG_MASK;
-               else
-                  R[SR] |= Z_FLAG_MASK;
-               
-                  
-               // set overflow flag
-               if(result > MAX_MASK)
-                  R[SR] |= O_FLAG_MASK;
-               else
-                  R[SR] &= NO_FLAG_MASK;
-                  
-               R[r3] = (result&MAX_MASK);
-               break;
-            case 0xC: // 1100  (C) - DIV <R1> <R2> <R3> - divide R2 by R1 and store to R3
-               if(R[r2] == 0){
-                  // divide by zero ... set exception flag
-                  R[SR] |= X_FLAG_MASK;
-                  break;
-               }else{
-                  R[SR] &= NX_FLAG_MASK;
-               }
-               result = Math.floor(R[r1]/R[r2]);
-               // set zero flag
-               if(result)
-                  R[SR] &= NZ_FLAG_MASK;
-               else
-                  R[SR] |= Z_FLAG_MASK;
-                  
-               R[r3] = (result&MAX_MASK);
-               break;
-            case 0xD: //  1101  (D) - XOR <R1> <R2> <R3> - bitwise XOR: R3=R1^R2
-               result = R[r1]^R[r2];
-               // set zero flag
-               if(result)
-                  R[SR] &= NZ_FLAG_MASK;
-               else
-                  R[SR] |= Z_FLAG_MASK;
-                  
-               R[r3] = (result&MAX_MASK);
-               break;
-            case 0xE: // 1110  (E) - AND <R1> <R2> <R3> - bitwise AND: R3=R1&R2
-               result = R[r1]&R[r2];
-               // set zero flag
-               if(result)
-                  R[SR] &= NZ_FLAG_MASK;
-               else
-                  R[SR] |= Z_FLAG_MASK;
-                  
-               R[r3] = (result&MAX_MASK);
-               break;
-            case 0xF: //  1111  (F) - HLT               - halt
-               this.turnOff();
-               this.halt('HLT');
-               return;
- 
+               R[PC]++;
+               this.PC = R[PC];
+            } // end for loop
+         }catch(e){
+            console.error("CPU HALTED ", e);
+            this.turnOff();
          }
-         R[PC]++;
-         this.PC = R[PC];
       };
       
+      
+      DummyCPU.superclass.constructor.call(
+         this,
+         
+         
+         new Int32Array(config.memorySize),
+         new Int32Array(8),
+         [],
+         clock,
+         config.instructionsCount
+      );
    };
    
    libDraw.ext(DummyCPU, CPU,{
       halt: function(msg){
          console.log('CPU HAS HALTED: ' , msg);
+         console.log('---------------------------------');
+         console.log(' CPU START ');
+         console.log(helpers.memToHex(cpu.M).join('\n'));
          this.turnOff();
+      },
+      toString: function(){
+         return "DUMMY CPU";
       }
    });
    
@@ -896,9 +917,9 @@
    
    
    $(document).ready(function(){
-      var interval = 1000; // ~20Hz
+      var interval = 30; // ~20Hz
       var mode = 'interval'; // 
-      var insCnt = 1; // instructions count per cycle
+      var insCnt = 145000; // instructions count per cycle
       var fac = 10000;
       var threshold = 0.1;
       
@@ -995,12 +1016,19 @@
       ds.sub("A0","A0","A0");
       ds.jz("A2");
       ds.hlt();
+
+      
       ds.storeProgram(cpu.M);
+      console.log(ds.decode(cpu.M).join('\n'));
+      console.log(helpers.memToHex(cpu.M).join('\n'));
+      console.log('---------------------------------');
+      console.log(' CPU START ');
       cpu.turnOn();
       //debugger
-     /* cpu.cycle(0);
-      cpu.cycle(1);
-      cpu.cycle(2);
+      
+     // cpu.cycle(0);
+    //  cpu.cycle(1);
+      /*cpu.cycle(2);
       cpu.cycle(3);
       cpu.cycle(4);
       cpu.cycle(5);

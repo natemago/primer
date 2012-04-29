@@ -25,3 +25,96 @@ light-gray: b3b3b3
    color: b3b3b3;
 }
 
+
+/* MEMORY MONITOR */
+.memory-monitor{
+   background: #b3b3b3;
+   color: #000;
+   font: 12px monospace;
+}
+.memory-address-bar{
+   background: #000;
+   float: left;
+   text-align: right;
+   color: #3b3b3b;
+}
+.memory-bar{
+   float: left;
+   background: #b3b3b3;
+   border-right: solid 1px #3b3b3b;
+}
+/*memory-highlight*/
+.memory-address-label{
+   padding-left: 4px;
+   padding-right: 4px;
+}
+.memory-value-label{
+   padding-left: 15px;
+   padding-right: 25px;
+}
+
+.memory-address-label.memory-highlight{
+   color: #0076FF;
+}
+.memory-value-label.memory-highlight{
+   color: #3b3b3b;
+   background: #FFC500;
+}
+
+.memory-disassm-bar{
+   background: #b3b3b3;
+   float: left;
+   
+   
+}
+
+.memory-disassm-label{
+   color: #3b3b3b;
+   padding-left: 20px;
+   padding-right: 10px;
+}
+.memory-disassm-label.memory-highlight{
+   color: #3b3b3b;
+   background: #FFC500;
+   
+}
+
+/* CPU Monitor */
+.cpu-monitor{
+   background: #000;
+   font: 12px monospace;
+}
+.cpu-registers-monitor{
+   padding: 5px;
+}
+.register-entry{
+   /*border-radius: 3px; 
+   -moz-border-radius: 3px; 
+   -webkit-border-radius: 3px; 
+   border: 1px solid #3b3b3b;*/
+   padding: 3px;
+   text-align: right;
+}
+.register-label{
+   color: #3b3b3b;
+   font-weight: bold;
+   width: 150px;
+}
+.register-value{
+   background: #b3b3b3;
+   color: #3b3b3b;
+   padding-left: 5px;
+   padding-right: 5px;
+}
+.psr-flag-on{
+   color: #0076FF;
+   background: #000;
+}
+.psr-flag-off{
+   color: #3b3b3b;
+   background: #000;
+}
+.status-register{
+   background: #000;
+}
+
