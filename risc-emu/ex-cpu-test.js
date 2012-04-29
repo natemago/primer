@@ -149,13 +149,23 @@ $(document).ready(function(){
          if(cpu.halted)
             cc.stop();
       });
-      cc.start();
-      
-      window.step=function(){
+      //cc.start();
+      cm.update();
+      mm.highlight(cpu.PC);
+      var step=function(){
+         if(cpu.halted)return;
          cpu.cycle(0);
          mm.remapFrom(0);
          mm.highlight(cpu.PC);
          cm.update();
-      }
-      
+      };
+      document.body.appendChild($('<input type="button" name="STEP" id="step" value="step" style="position: absolute; top: 10px; right: 10px;"/>')[0]);
+      $('#step').click(step);
+      $(document).keypress(function(e){
+         switch(e.which){
+            case 110:
+               step();
+               break;
+         }
+      });
 });
