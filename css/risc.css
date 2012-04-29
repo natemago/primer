@@ -22,7 +22,7 @@ light-gray: b3b3b3
 }
 
 .monitor-value{
-   color: b3b3b3;
+   color: #b3b3b3;
 }
 
 
@@ -76,29 +76,33 @@ light-gray: b3b3b3
 .memory-disassm-label.memory-highlight{
    color: #3b3b3b;
    background: #FFC500;
-   
 }
 
 /* CPU Monitor */
 .cpu-monitor{
+   float: left;
    background: #000;
    font: 12px monospace;
 }
 .cpu-registers-monitor{
    padding: 5px;
+   width: 300px;
 }
 .register-entry{
-   /*border-radius: 3px; 
+   border-radius: 3px; 
    -moz-border-radius: 3px; 
    -webkit-border-radius: 3px; 
-   border: 1px solid #3b3b3b;*/
+   /*border: 1px solid #3b3b3b;*/
    padding: 3px;
    text-align: right;
+   background: #b3b3b3;
+   margin: 1 1 1 1;
 }
 .register-label{
    color: #3b3b3b;
    font-weight: bold;
    width: 150px;
+   
 }
 .register-value{
    background: #b3b3b3;
@@ -108,13 +112,17 @@ light-gray: b3b3b3
 }
 .psr-flag-on{
    color: #0076FF;
-   background: #000;
 }
 .psr-flag-off{
    color: #3b3b3b;
-   background: #000;
 }
 .status-register{
-   background: #000;
+  
 }
-
+.status-register.register-value{
+   background: #000;
+   border-radius: 5px; 
+   -moz-border-radius: 5px; 
+   -webkit-border-radius: 5px;
+   font-weight: bold;
+}
