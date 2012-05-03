@@ -140,59 +140,110 @@
          
          return ret;
       },
+      toByteArray: function(strAscii){
+         var barr = [];
+         for(var i = 0; i < strAscii.length; i++){
+            barr[i]=strAscii.charCodeAt(i);
+         }
+         return barr;
+      },
       /**
        * Base64 encoder/decoder
        */
       b64: {
-         PADDING: "=",
-         ALPHABET: [
-            'A','B','C','D','E','F','G','H','I','J',
-            'K','L','M','N','O','P','Q','R','S','T',
-            'U','V','W','X','Y','Z','a','b','c','d',
-            'e','f','g','h','i','j','k','l','m','n',
-            'o','p','q','r','s','t','u','v','w','x',
-            'y','z','0','1','2','3','4','5','6','7',
-            '8','9','+','/'],
-         NEWLINE: String.fromCharCode(13,10), // CR, LF
-         encode: function(barr){ // encode byte array
-            //debugger
+         VARIANTS:{
+            'mime':{
+               alphabet: [
+                  'A','B','C','D','E','F','G','H','I','J',
+                  'K','L','M','N','O','P','Q','R','S','T',
+                  'U','V','W','X','Y','Z','a','b','c','d',
+                  'e','f','g','h','i','j','k','l','m','n',
+                  'o','p','q','r','s','t','u','v','w','x',
+                  'y','z','0','1','2','3','4','5','6','7',
+                  '8','9','+','/'],
+               padding:"=",
+               maxLine: 76,
+               lineSeparator: String.fromCharCode(13,10) // CR+LF
+            },
+            'url': {
+               alphabet: [
+                  'A','B','C','D','E','F','G','H','I','J',
+                  'K','L','M','N','O','P','Q','R','S','T',
+                  'U','V','W','X','Y','Z','a','b','c','d',
+                  'e','f','g','h','i','j','k','l','m','n',
+                  'o','p','q','r','s','t','u','v','w','x',
+                  'y','z','0','1','2','3','4','5','6','7',
+                  '8','9','-','_'],
+               padding:"=",
+               maxLine: 76,
+               lineSeparator: String.fromCharCode(13,10) // CR+LF
+            },
+            'filenames':{
+               alphabet: [
+                  'A','B','C','D','E','F','G','H','I','J',
+                  'K','L','M','N','O','P','Q','R','S','T',
+                  'U','V','W','X','Y','Z','a','b','c','d',
+                  'e','f','g','h','i','j','k','l','m','n',
+                  'o','p','q','r','s','t','u','v','w','x',
+                  'y','z','0','1','2','3','4','5','6','7',
+                  '8','9','+','-'],
+               padding:"=",
+               maxLine: 76,
+               lineSeparator: String.fromCharCode(13,10) // CR+LF
+            }
+         },
+         encode: function(barr, variant){ // encode byte array
+            variant = variant || 'mime';
+            var padChar = risc.utils.b64.VARIANTS[variant].padding;
+            var alphabet = risc.utils.b64.VARIANTS[variant].alphabet;
+            var newLine = risc.utils.b64.VARIANTS[variant].lineSeparator;
+            var maxLine = risc.utils.b64.VARIANTS[variant].maxLine;
             var r = '';
             var padding = "";
             var p = 0;
             if(barr.length%3 == 1){
-               padding = risc.utils.b64.PADDING+risc.utils.b64.PADDING;
+               padding = padChar+padChar;
                p = 2;
             }else if (barr.length%3 == 2) {
-               padding = risc.utils.b64.PADDING;
+               padding = padChar;
                p=1;
             }
-            var l = barr.length;
-            while(p--)barr.push(0);
             
-            var retval = [], line= "";
+            var retval = [], line= "",v=0;
             
-            for(var i = 0; i < barr.length; i+=3){
-               var v = 0;
-               for(var j = 0; j < 3; j++){
-                  var v1 = barr[i*3+j]&0xFF;
-                  v<<=8;
-                  v|=barr[i*3+j]&0xFF;
+            for(var  i =0; i < barr.length; i++){
+               v|=barr[i];              
+               if((i+1)%3==0){
+                  for(j=3;j>=0;j--){
+                     r=alphabet[(v>>(6*j))&0x3f];
+                     line+=r;
+                     if(line.length == maxLine){
+                        retval.push(line);
+                        line="";
+                     }               
+                  }
+                  v=0;
                }
-               console.log(risc.utils.wToBinary(v));
-               for(var j = 3; j >=0; j--){
-                  var v3 = (v>>(j*6))&0x3F;
-                  line+=risc.utils.b64.ALPHABET[v3];
-                  console.log(risc.utils.toBinary(v3, 6));
-                  if(line.length == 64){
+               v<<=8;
+            }
+            if(p!=0){
+               for(var i = 3; i >= p; i--){
+                  r=alphabet[(v>>(6*i))&0x3f];
+                  line+=r;
+                  if(line.length == maxLine){
                      retval.push(line);
-                     line = "";
+                     line="";
                   }
                }
             }
+            
             if(line != ""){
                retval.push(line);
             }
-            return retval.join(risc.utils.b64.NEWLINE);
+            return retval.join(newLine)+padding;
+         },
+         decode: function(str, variant){
+            
          }
          
       }
