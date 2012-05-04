@@ -261,4 +261,23 @@
       
    });
    
+   
+   risc.mon.Calc = function(){
+      var m = [
+         '<div class="mon-tools-calc">',
+            '<div class="calc-actions"></div>',
+            '<div class="calc-panels"></div>',
+         '</div>'
+      ];
+   };
+   libDraw.ext(risc.mon.Calc, {
+      addOperation: function(name, clazz, callback){},
+      addPanel: function(name, onChange){},
+      showPanel: function(name){},
+      hidePanel: function(name){},
+      show: function(){},
+      hide: function(){}
+   });
+   
+   
 })(jQuery);
