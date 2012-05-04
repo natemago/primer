@@ -168,4 +168,7 @@ $(document).ready(function(){
                break;
          }
       });
+      
+      calc = new risc.mon.Calc();
+      
 });

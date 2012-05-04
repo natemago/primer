@@ -265,18 +265,191 @@
    risc.mon.Calc = function(){
       var m = [
          '<div class="mon-tools-calc">',
-            '<div class="calc-actions"></div>',
-            '<div class="calc-panels"></div>',
+            '<div class="calc-actions round-bottom-right"></div>',
+            '<div class="calc-panels round-bottom-right"></div>',
          '</div>'
       ];
+      this.el = $(m.join(''))[0];
+      this.operationsEl = $('.calc-actions', this.el)[0];
+      this.panelsEl     = $('.calc-panels',  this.el)[0];
+      
+      $(document.body).append(this.el);
+      this.operations = [];
+      this.panels = {};
+      
+      this.parseToNumber = parseInt;
+      
+      this.addOperation('add', 'calc-operation-add', function(inp1, inp2){
+         var v1 = this.parseToNumber($(inp1).val());
+         var v2 = this.parseToNumber($(inp2).val());
+         return v1+v2;
+      },'+');
+      this.addOperation('sub', 'calc-operation-sub', function(inp1, inp2){
+         var v1 = this.parseToNumber($(inp1).val());
+         var v2 = this.parseToNumber($(inp2).val());
+         return v1-v2;
+      },'-');
+      this.addOperation('xor', 'calc-operation-sub', function(inp1, inp2){
+         var v1 = this.parseToNumber($(inp1).val());
+         var v2 = this.parseToNumber($(inp2).val());
+         return v1^v2;
+      },'^');
+      this.addOperation('shift-right', 'calc-operation-sub', function(inp1, inp2){
+         var v1 = this.parseToNumber($(inp1).val());
+         var v2 = this.parseToNumber($(inp2).val());
+         return v1>>v2;
+      },'>>');
+      this.addOperation('shift-left', 'calc-operation-sub', function(inp1, inp2){
+         var v1 = this.parseToNumber($(inp1).val());
+         var v2 = this.parseToNumber($(inp2).val());
+         return v1<<v2;
+      },'<<');
+      
+      
+      
+      this.addPanel('Dec', function(inp, input1, input2, result, value){
+         if(value != NaN){
+            result.innerHTML = value;
+         }
+      });
+      this.addPanel('HEX', function(inp, input1, input2, result, value){
+         if(value != NaN){
+            result.innerHTML = risc.utils.wToHex(value);
+         }
+      });
+      
    };
+   
    libDraw.ext(risc.mon.Calc, {
-      addOperation: function(name, clazz, callback){},
-      addPanel: function(name, onChange){},
-      showPanel: function(name){},
-      hidePanel: function(name){},
-      show: function(){},
-      hide: function(){}
+      addOperation: function(name, clazz, callback, markup){
+         var el = $([
+            '<div class="', clazz, ' round-all calc-operation" title="',name,'">',
+               (markup || ''),
+            '</div>' 
+         ].join(''))[0];
+         var self = this;
+         $(el).click(function(){
+            self.currentOperation = callback;
+            for(var  i = 0; i < self.operations.length; i++){
+               $(self.operations[i])
+                  .removeClass('calc-operation-selected');
+            }
+            $(this).addClass('calc-operation-selected');
+            self.__trigerChange();
+         });
+         
+         $(el).hover(function(){
+            $(this).addClass('calc-operation-hover');
+         },function(){
+            $(this).removeClass('calc-operation-hover');
+         });
+         
+         $(this.operationsEl).append(el);
+         this.operations.push(el);
+      },
+      addPanel: function(name, onChange){
+         var self = this;
+         var m = [
+            '<div class="calc-panel round-bottom-right">',
+               '<div class="calc-panel-title">',name,'</div>',
+               '<div class="calc-panel-inputs">',
+                  '<div class="calc-panel-input input-1">',
+                     '<span class="calc-input-decr round-all">-</span>',
+                     '<input type="text" class="calc-text-input"/>',
+                     '<span class="calc-input-incr round-all">+</span>',
+                  '</div>',
+                  '<div class="calc-panel-input input-2">',
+                     '<span class="calc-input-decr round-all">-</span>',
+                     '<input type="text" class="calc-text-input"/>',
+                     '<span class="calc-input-incr round-all">+</span>',
+                  '</div>',
+                  '<div class="calc-panel-result">',
+                     '<span class="calc-input-decr round-all">|</span>',
+                     '<span type="text" class="calc-result"/>',
+                     '<span class="calc-input-incr round-all">|</span>',
+                  '</div>',
+               '</div>',
+            '</div>'
+         ].join('');
+         var el = $(m)[0];
+         $('.calc-panel-input', el).each(function(i,e){
+            (function(panel){
+               var inp = $('.calc-text-input', panel);
+               $('.calc-input-decr', panel).click(function(ev){
+                  var val = inp.val();
+                  if(val !== undefined){
+                     val = self.parseToNumber(val);
+                     if(val != NaN){
+                        val--;
+                        inp.val(val);
+                        self.__trigerChange();
+                     }
+                  }
+                  ev.stopPropagation();
+               });
+               $('.calc-input-incr', panel).click(function(ev){
+                  var val = inp.val();
+                  if(val !== undefined){
+                     val = self.parseToNumber(val);
+                     if(val != NaN){
+                        val++;
+                        inp.val(val);
+                        self.__trigerChange();
+                     }
+                  }
+                  ev.stopPropagation();
+               });
+            })(this);
+         });
+         
+         var result = $('.calc-result', el)[0];
+         
+         var changeHandler = function(inp){
+            return function(){
+               var input1 = $('.calc-text-input',el)[0];
+               var input2 = $('.calc-text-input',el)[1];
+               self.__setValues(input1,input2);
+               if(self.currentOperation){
+                  var value = self.currentOperation(input1, input2);
+                  onChange.call(self, inp, input1, input2, result, value);
+               }
+            };
+         };
+         $('.input-1 .calc-text-input',el).change(changeHandler('input-1'));
+         $('.input-2 .calc-text-input',el).change(changeHandler('input-2'));
+         
+         this.panels[name] = el;
+         $(this.panelsEl).append(el);
+         
+         $('.calc-text-input', el).keyup(function(){
+            self.__trigerChange();
+         });
+      },
+      __trigerChange: function(){
+         $('.calc-text-input', this.el).trigger('change');
+      },
+      __setValues: function(inp1, inp2){
+         for(var k in this.panels){
+            if(this.panels.hasOwnProperty(k)){
+               $('.input-1 .calc-text-input',this.panels[k]).val($(inp1).val());
+               $('.input-2 .calc-text-input',this.panels[k]).val($(inp2).val());
+            }
+         }
+      },
+      showPanel: function(name){
+         if(this.panels[name])
+            $(this.panels[name]).show();
+      },
+      hidePanel: function(name){
+         if(this.panels[name])
+            $(this.panels[name]).hide();
+      },
+      show: function(){
+         $(this.el).show();
+      },
+      hide: function(){
+         $(this.el).hide();
+      }
    });
    
    
