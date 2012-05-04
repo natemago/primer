@@ -279,6 +279,14 @@
       
       this.parseToNumber = parseInt;
       
+      this.values = {
+         value1: 0,
+         value2: 0,
+         result: 0
+      };
+      
+      var self = this;
+      
       this.addOperation('add', 'calc-operation-add', function(inp1, inp2){
          var v1 = this.parseToNumber($(inp1).val());
          var v2 = this.parseToNumber($(inp2).val());
@@ -311,13 +319,31 @@
          if(value != NaN){
             result.innerHTML = value;
          }
+      }, function(el, prevVal){
+         try{
+            return parseInt($(el).val());
+         }catch(ex){
+            return prevVal;
+         }
+      },function(v){
+         return v;
       });
       this.addPanel('HEX', function(inp, input1, input2, result, value){
          if(value != NaN){
             result.innerHTML = risc.utils.wToHex(value);
          }
+      }, function(el, prevVal){
+         try{
+            return parseInt($(el).val(),16);
+         }catch(ex){
+            return prevVal;
+         }
+      }, function(v){
+         return risc.utils.wToHex(v);
       });
       
+      
+      this.__updateValues();
    };
    
    libDraw.ext(risc.mon.Calc, {
@@ -347,7 +373,7 @@
          $(this.operationsEl).append(el);
          this.operations.push(el);
       },
-      addPanel: function(name, onChange){
+      addPanel: function(name, onChange, parseValue, writeValue){
          var self = this;
          var m = [
             '<div class="calc-panel round-bottom-right">',
@@ -372,35 +398,39 @@
             '</div>'
          ].join('');
          var el = $(m)[0];
-         $('.calc-panel-input', el).each(function(i,e){
-            (function(panel){
-               var inp = $('.calc-text-input', panel);
-               $('.calc-input-decr', panel).click(function(ev){
-                  var val = inp.val();
-                  if(val !== undefined){
-                     val = self.parseToNumber(val);
-                     if(val != NaN){
-                        val--;
-                        inp.val(val);
-                        self.__trigerChange();
-                     }
-                  }
-                  ev.stopPropagation();
-               });
-               $('.calc-input-incr', panel).click(function(ev){
-                  var val = inp.val();
-                  if(val !== undefined){
-                     val = self.parseToNumber(val);
-                     if(val != NaN){
-                        val++;
-                        inp.val(val);
-                        self.__trigerChange();
-                     }
-                  }
-                  ev.stopPropagation();
-               });
-            })(this);
-         });
+         
+         var decrHandler = function(inp){
+            if(inp == 'input-1'){
+               return function(){
+                  self.values.value1--;
+                  self.__trigerChange();
+               }
+            }else{
+               return function(){
+                  self.values.value2--;
+                  self.__trigerChange();
+               }
+            }
+         };
+         
+         var incrHandler = function(inp){
+            if(inp == 'input-1'){
+               return function(){
+                  self.values.value1++;
+                  self.__trigerChange();
+               }
+            }else{
+               return function(){
+                  self.values.value2++;
+                  self.__trigerChange();
+               }
+            }
+         };
+         
+         $('.input-1 .calc-input-decr', el).click(decrHandler('input-1'));
+         $('.input-2 .calc-input-decr', el).click(decrHandler('input-2'));
+         $('.input-1 .calc-input-incr', el).click(incrHandler('input-1'));
+         $('.input-2 .calc-input-incr', el).click(incrHandler('input-2'));
          
          var result = $('.calc-result', el)[0];
          
@@ -408,17 +438,19 @@
             return function(){
                var input1 = $('.calc-text-input',el)[0];
                var input2 = $('.calc-text-input',el)[1];
-               self.__setValues(input1,input2);
+               self.values.value1 = parseValue(input1, self.values.value1);
+               self.values.value2 = parseValue(input2, self.values.value2);
                if(self.currentOperation){
-                  var value = self.currentOperation(input1, input2);
-                  onChange.call(self, inp, input1, input2, result, value);
+                  self.values.result = self.currentOperation(input1, input2);
+                  onChange.call(self, inp, input1, input2, result, self.values.result);
                }
+               self.__updateValues();
             };
          };
          $('.input-1 .calc-text-input',el).change(changeHandler('input-1'));
          $('.input-2 .calc-text-input',el).change(changeHandler('input-2'));
          
-         this.panels[name] = el;
+         this.panels[name] = {el:el,writeValue: writeValue};
          $(this.panelsEl).append(el);
          
          $('.calc-text-input', el).keyup(function(){
@@ -428,11 +460,18 @@
       __trigerChange: function(){
          $('.calc-text-input', this.el).trigger('change');
       },
-      __setValues: function(inp1, inp2){
+      __updateValues: function(){
+         if(this.values.value1 != 0 && !this.values.value1)
+            this.values.value1 = 0;
+         if(this.values.value2 != 0 && !this.values.value2)
+            this.values.value2 = 0;
+         if(this.values.result != 0 && !this.values.result)
+            this.values.result = 0;
          for(var k in this.panels){
             if(this.panels.hasOwnProperty(k)){
-               $('.input-1 .calc-text-input',this.panels[k]).val($(inp1).val());
-               $('.input-2 .calc-text-input',this.panels[k]).val($(inp2).val());
+               $('.input-1 .calc-text-input',this.panels[k].el).val(this.panels[k].writeValue(this.values.value1));
+               $('.input-2 .calc-text-input',this.panels[k].el).val(this.panels[k].writeValue(this.values.value2));
+               $('.calc-result', this.panels[k].el).val(this.panels[k].writeValue(this.values.result));
             }
          }
       },
