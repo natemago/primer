@@ -148,7 +148,7 @@
       },
       writeText: function(row, col, text, fgColor, bgColor){
          for(var i = 0; i < text.length; i++){
-            col+=i;
+            col++;
             if(col>=this.mode.cols){
                col=0;
                row++;
