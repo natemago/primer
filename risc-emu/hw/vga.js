@@ -2,7 +2,7 @@
    /*
     * VGA, SVGA, QVGA
     */
-    
+    libDraw.ns('risc.hw.vga');
     
     // Text mode...
     //   
@@ -37,7 +37,8 @@
          rows: 25,
          charWidth: 8,
          charHeight: 8,
-         font: '8px monospace'
+         font: '8px monospace',
+         fontHeight: 8
       },
       'VGA_80_25': {
          width: 720,
@@ -46,7 +47,8 @@
          rows: 25,
          charWidth: 9,
          charHeight: 16,
-         font: '10px monospace'
+         font: '12px monospace',
+         fontHeight: 12
       }
       
    };
@@ -95,46 +97,79 @@
    };
    libDraw.ext(VGA,{
       turnOn: function(){
-         
+         this.runtime.clock.start(); // for now
       },
       turnOff: function(){
-         
+         this.runtime.clock.stop(); // for now
       },
       draw: function(g,rt){
          var total = this.mode.rows*this.mode.cols/2;
-         g.background('#000');
-         var c = 0;
-         var bc = 0;
-         var fc = 0;
-         var rc = 0;
-         var cc = 0;
+         if(!this.bgset){
+            this.bgset = true;
+            g.background('#000');            
+         }
+
+         g.setFont(this.mode.font);
+         var l = 0;
+         var row = 0;
+         var col = 0;
+         var originW = this.origin>>2; // div by 4
          for(var i = 0; i < total; i++){
-            if(this.cache[i] != this.memory[this.origin+i]){
-               this.cache[i] = this.memory[this.origin+1];
-               c = this.cache[i]&0xFF;
-               bc = (this.cache[i]>>12)&&0xF;
-               fc = (this.cache[i]>>8)&&0xF;
-               g.fill(_CGA_PALLETE[bc]);
-               cc = (i%this.mode.cols)*2*this.mode.charWidth;
-               rc = Math.floor(i/this.mode.rows)*this.mode.charHeight;
-               g.rect(cc, rc,
-                   this.mode.charWidth, this.mode.charHeight);
-               g.fill(_CGA_PALLETE[fc]);
-               g.text(String.fromCharCode(this.cache[i]),cc,rc+this.mode.charHeight);
+            if(this.cache[i] != this.memory[originW+i]){
                
-               c = (this.cache[i]>>16)&0xFF;
-               bc = (this.cache[i]>>28)&&0xF;
-               fc = (this.cache[i]>>24)&&0xF;
-               
-               g.fill(_CGA_PALLETE[bc]);
-               g.rect(cc+1, rc,
-                   this.mode.charWidth, this.mode.charHeight);
-               g.fill(_CGA_PALLETE[fc]);
-               g.text(String.fromCharCode(this.cache[i]),cc,rc+this.mode.charHeight);
+               this.cache[i] = this.memory[originW+i];
+               l = i*2;
+               row = Math.floor(l/this.mode.cols);
+               col = l%this.mode.cols;
+               this.__printCharacter(row,col, this.cache[i], g);
+               col++;
+               if(col >= this.mode.cols){
+                  col = 0;
+                  row++;
+               }
+               this.__printCharacter(row,col, this.cache[i]>>16, g);
             }
          }
       },
-      
+      __printCharacter: function(row, col, char, graphics){
+         graphics.fill('#000');
+         graphics.rect(col*this.mode.charWidth,
+                        row*this.mode.charHeight,
+                           this.mode.charWidth, this.mode.charHeight);
+         graphics.fill(_CGA_PALLETE[(char>>12)&0xF]);
+         graphics.rect(col*this.mode.charWidth,
+                        row*this.mode.charHeight,
+                           this.mode.charWidth, this.mode.charHeight);
+         graphics.fill(_CGA_PALLETE[(char>>8)&0xF]);
+         graphics.stroke(_CGA_PALLETE[(char>>8)&0xF]);
+         graphics.text(String.fromCharCode(char&0xFF),
+            col*this.mode.charWidth,
+            row*this.mode.charHeight+this.mode.fontHeight);
+      },
+      writeText: function(row, col, text, fgColor, bgColor){
+         for(var i = 0; i < text.length; i++){
+            col+=i;
+            if(col>=this.mode.cols){
+               col=0;
+               row++;
+            }
+            if(row>=this.mode.rows)
+               break;
+            this.__writeChar(row,col,text[i],fgColor,bgColor);
+         }
+      },
+      __writeChar: function(row, col, char, fgColor, bgColor){
+         var origin = this.origin>>2;
+         var halfWord = row*this.mode.cols+col;
+         var word = Math.floor(halfWord/2)  + origin;
+         var sh = (halfWord%2)*16;
+         var int32 = char.charCodeAt(0) | ((fgColor&0xF)<<12) | ((bgColor&0xF)<<8);
+         this.memory[word] = this.memory[word]&(~(0xFFFF<<sh)) | int32<<sh;
+         //console.log('PRINTED CHAR IN WORD: ', word, ' -> ', risc.utils.wToHex(this.memory[word]));   
+      }
    });
+   
+   
+   risc.hw.vga.VGA = VGA;
     
 })(jQuery);

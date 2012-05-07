@@ -287,61 +287,42 @@
       
       var self = this;
       
-      this.addOperation('add', 'calc-operation-add', function(inp1, inp2){
-         var v1 = this.parseToNumber($(inp1).val());
-         var v2 = this.parseToNumber($(inp2).val());
-         return v1+v2;
+      this.addOperation('Add','',function(){
+         self.values.result = self.values.value1+self.values.value2;
       },'+');
-      this.addOperation('sub', 'calc-operation-sub', function(inp1, inp2){
-         var v1 = this.parseToNumber($(inp1).val());
-         var v2 = this.parseToNumber($(inp2).val());
-         return v1-v2;
+      
+      this.addOperation('Sub','',function(){
+         self.values.result = self.values.value1-self.values.value2;
       },'-');
-      this.addOperation('xor', 'calc-operation-sub', function(inp1, inp2){
-         var v1 = this.parseToNumber($(inp1).val());
-         var v2 = this.parseToNumber($(inp2).val());
-         return v1^v2;
-      },'^');
-      this.addOperation('shift-right', 'calc-operation-sub', function(inp1, inp2){
-         var v1 = this.parseToNumber($(inp1).val());
-         var v2 = this.parseToNumber($(inp2).val());
-         return v1>>v2;
-      },'>>');
-      this.addOperation('shift-left', 'calc-operation-sub', function(inp1, inp2){
-         var v1 = this.parseToNumber($(inp1).val());
-         var v2 = this.parseToNumber($(inp2).val());
-         return v1<<v2;
-      },'<<');
       
       
-      
-      this.addPanel('Dec', function(inp, input1, input2, result, value){
-         if(value != NaN){
-            result.innerHTML = value;
-         }
-      }, function(el, prevVal){
-         try{
-            return parseInt($(el).val());
-         }catch(ex){
-            return prevVal;
-         }
+      this.addPanel('DEC',function(v){
+         v = parseInt(v,10);
+         if(v!=0 && !v)
+            v=0;
+         console.log('dec:parse:',v);
+         return v;
       },function(v){
+         if(v!=0 && !v)
+            v=0;
+         console.log('dec:write:',v);
          return v;
       });
-      this.addPanel('HEX', function(inp, input1, input2, result, value){
-         if(value != NaN){
-            result.innerHTML = risc.utils.wToHex(value);
-         }
-      }, function(el, prevVal){
-         try{
-            return parseInt($(el).val(),16);
-         }catch(ex){
-            return prevVal;
-         }
-      }, function(v){
-         return risc.utils.wToHex(v);
-      });
       
+      this.addPanel('HEX',function(v){
+         v = parseInt(v,16);
+         if(v!=0 && !v)
+            v=0;
+         console.log('dec-2:parse:',v);
+         return v;
+      },function(v){
+         if(v!=0 && !v)
+            v=0;
+         //debugger
+         v = risc.utils.toHexNP(v,8);
+         console.log('dec-2:write:',v);
+         return v;
+      });
       
       this.__updateValues();
    };
@@ -361,7 +342,7 @@
                   .removeClass('calc-operation-selected');
             }
             $(this).addClass('calc-operation-selected');
-            self.__trigerChange();
+            self.__trigerChange($('.calc-text-input',self.el)[0]);
          });
          
          $(el).hover(function(){
@@ -373,7 +354,7 @@
          $(this.operationsEl).append(el);
          this.operations.push(el);
       },
-      addPanel: function(name, onChange, parseValue, writeValue){
+      addPanel: function(name, parseValue, writeValue){
          var self = this;
          var m = [
             '<div class="calc-panel round-bottom-right">',
@@ -403,12 +384,14 @@
             if(inp == 'input-1'){
                return function(){
                   self.values.value1--;
-                  self.__trigerChange();
+                  self.__updateValues();
+                  self.__trigerChange($('.input-1 .calc-text-input',el)[0]);
                }
             }else{
                return function(){
                   self.values.value2--;
-                  self.__trigerChange();
+                  self.__updateValues();
+                  self.__trigerChange($('.input-2 .calc-text-input',el)[0]);
                }
             }
          };
@@ -417,12 +400,14 @@
             if(inp == 'input-1'){
                return function(){
                   self.values.value1++;
-                  self.__trigerChange();
+                  self.__updateValues();
+                  self.__trigerChange($('.input-1 .calc-text-input',el)[0]);
                }
             }else{
                return function(){
                   self.values.value2++;
-                  self.__trigerChange();
+                  self.__updateValues();
+                  self.__trigerChange($('.input-2 .calc-text-input',el)[0]);
                }
             }
          };
@@ -436,16 +421,18 @@
          
          var changeHandler = function(inp){
             return function(){
-               var input1 = $('.calc-text-input',el)[0];
-               var input2 = $('.calc-text-input',el)[1];
-               self.values.value1 = parseValue(input1, self.values.value1);
-               self.values.value2 = parseValue(input2, self.values.value2);
+               var val = $(this).val();
+               console.log('change:',inp);
+               if(inp == 'input-1'){
+                  self.values.value1 = parseValue(val);
+               }else{
+                  self.values.value2 = parseValue(val);
+               }
                if(self.currentOperation){
-                  self.values.result = self.currentOperation(input1, input2);
-                  onChange.call(self, inp, input1, input2, result, self.values.result);
+                  self.currentOperation();
                }
                self.__updateValues();
-            };
+            }
          };
          $('.input-1 .calc-text-input',el).change(changeHandler('input-1'));
          $('.input-2 .calc-text-input',el).change(changeHandler('input-2'));
@@ -454,24 +441,19 @@
          $(this.panelsEl).append(el);
          
          $('.calc-text-input', el).keyup(function(){
-            self.__trigerChange();
+            console.log('keyup');
+            self.__trigerChange(this);
          });
       },
-      __trigerChange: function(){
-         $('.calc-text-input', this.el).trigger('change');
+      __trigerChange: function(e){
+         $(e).trigger('change');
       },
       __updateValues: function(){
-         if(this.values.value1 != 0 && !this.values.value1)
-            this.values.value1 = 0;
-         if(this.values.value2 != 0 && !this.values.value2)
-            this.values.value2 = 0;
-         if(this.values.result != 0 && !this.values.result)
-            this.values.result = 0;
          for(var k in this.panels){
             if(this.panels.hasOwnProperty(k)){
-               $('.input-1 .calc-text-input',this.panels[k].el).val(this.panels[k].writeValue(this.values.value1));
-               $('.input-2 .calc-text-input',this.panels[k].el).val(this.panels[k].writeValue(this.values.value2));
-               $('.calc-result', this.panels[k].el).val(this.panels[k].writeValue(this.values.result));
+               $('.input-1 .calc-text-input',this.panels[k].el)[0].value=this.panels[k].writeValue(this.values.value1);
+               $('.input-2 .calc-text-input',this.panels[k].el)[0].value=this.panels[k].writeValue(this.values.value2);
+               $('.calc-result', this.panels[k].el).html(this.panels[k].writeValue(this.values.result));
             }
          }
       },

@@ -170,5 +170,17 @@ $(document).ready(function(){
       });
       
       calc = new risc.mon.Calc();
-      
+      var testMem = new Int32Array(1024*1024); // 4MB
+      vga = new risc.hw.vga.VGA({
+         mode: 'VGA_80_25',
+         memory: testMem
+      });
+      vga.turnOn();
+      vga.writeText(0,0,"a", 5, 1);
+      vga.writeText(0,1,"b", 0, 1);
+      //vga.runtime.screen().cycle(0);
+      //vga.runtime.screen().cycle(0);
+      for(var i = 0; i < 256; i++){
+         vga.writeText(Math.floor(i/80), i%80, String.fromCharCode(i), 0,15);
+      }
 });

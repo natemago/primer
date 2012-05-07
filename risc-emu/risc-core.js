@@ -103,6 +103,19 @@
          }
          return r;
       },
+      toHexNP: function(v, width){ // No Padding, width in nibbles
+         var r = [];
+         while( width-- ){
+            if((v>>(width*4))&0xF)
+               break;
+         }
+         if(width<0)
+            return '0';
+         do{
+            r.push(__HEX[(v>>(width*4))&0xF]);
+         }while(width--);
+         return r.join('');
+      },
       toBinary: function(v,width){
          var r = '';
          while(width--){
