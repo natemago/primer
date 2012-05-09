@@ -287,4 +287,91 @@
          return 'ARMv7 Processor Core';
       }
    });
+   
+   
+   // --------------------------------------------------------------------------
+   // ---------- The Instruction Sets ------------------------------------------
+   // --------------------------------------------------------------------------
+   
+   
+   /* Build uppon the following generalized pipeline phases:
+       1. Fetch
+       2. Decode
+       3. Execute
+       4. Write Back
+    */
+   var InstructionSetBuilder = function(config){
+      libDraw.ext(this, config);
+      this.instructions = {};
+      this.cycleTemplate = this.cycleTemplate 
+         || InstructionSetBuilder.DEFAULT_CYCLE_TEMPLATE;
+   };
+   
+   InstructionSetBuilder.DEFAULT_CYCLE_TEMPLATE = [
+      '@PREPARE_CYCLE@',
+      'for (var i = 0; i < @CYCLE_COUNT_EXPR@; i++) {',
+         '@PIPELINE@',
+      '}',
+      '@FINISH_CYCLE@'
+   ].join('\n');
+   
+   libDraw.ext(InstructionSetBuilder,{
+      
+      /**
+       * @method build - builds the "cycle" method for the virtual CPU for
+       *                   this instruction set.
+       */
+      build: function(){},
+      
+      /**
+       * @method assembler - generates the assembler/disassembler for this 
+       *                     instruction set.
+       */
+      assembler: function(){},
+      
+      
+      
+      
+      defFetch: function(){},
+      defDecode: function(){},
+      defExecute: function(){},
+      // defExecute alias
+      def: function(){
+         this.defExecute.apply(this, arguments);
+      },
+      defWriteBack: function(){},
+      setPhases: function(){}
+   });
+   
+   // ===============================
+   // ===== ARM Instruction Set =====
+   // ===============================
+   
+   var ARM_IS = new InstructionSetBuilder({
+      name: 'ARM'
+   });
+   
+   
+   // -------------------------------
+   
+   
+   // ===============================
+   // ==== Thumb Instruction Set ====
+   // ===============================
+   
+   
+   
+   
+   // -------------------------------
+   
+   // ===============================
+   // === ThumbEE Instruction Set ===
+   // ===============================
+   
+   
+   
+   
+   // -------------------------------
+   
+   
 })(jQuery);
