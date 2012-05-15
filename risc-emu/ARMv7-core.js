@@ -305,15 +305,26 @@
       this.instructions = {};
       this.cycleTemplate = this.cycleTemplate 
          || InstructionSetBuilder.DEFAULT_CYCLE_TEMPLATE;
+         
+      this.stages = {
+         'PREPARE_CYCLE': '// do nothing',
+         'FINISH_CYCLE': '// do nothing',
+         'CYCLE_COUNT_EXPR': 'this.instructionsCount',
+         'PIPELINE': '// empty loop'
+      };
+      this.pipeline = {};
    };
    
-   InstructionSetBuilder.DEFAULT_CYCLE_TEMPLATE = [
-      '@PREPARE_CYCLE@',
-      'for (var i = 0; i < @CYCLE_COUNT_EXPR@; i++) {',
-         '@PIPELINE@',
-      '}',
-      '@FINISH_CYCLE@'
-   ].join('\n');
+   InstructionSetBuilder.DEFAULT_CYCLE_TEMPLATES = {
+      'EXECUTION':[
+            '@PREPARE_CYCLE@',
+            'for (var i = 0; i < @CYCLE_COUNT_EXPR@; i++) {',
+               '@PIPELINE@',
+            '}',
+            '@FINISH_CYCLE@'
+         ].join('\n'),
+      'STEP': [].join('\n'),
+      'DEBUG': [].join('\n')   
    
    libDraw.ext(InstructionSetBuilder,{
       
@@ -321,7 +332,27 @@
        * @method build - builds the "cycle" method for the virtual CPU for
        *                   this instruction set.
        */
-      build: function(){},
+      build: function(mode){
+         var cycleTemplate = new x.util.Template({
+            template: this.cycleTemplate
+         });
+         var stagesContext = libDraw.ext({},this.stages);
+         
+         var cycleBody = cycleTemplate.merge(stagesContext);
+         try{
+            /*
+             * Build with the __RCT paramater
+             *   - __RCT - (Realtime Clock Tick) the clock tick number of the real clock...
+             */ 
+            var cycle = new Function('__RCT', cycleBody);
+            console.log('Cycle Body:\n', cycleBody);
+            console.log('Cycle function:\n', cycle);
+            return cycle;
+         }catch(ex){
+            throw ex;
+         }
+         return undefined;
+      },
       
       /**
        * @method assembler - generates the assembler/disassembler for this 
@@ -329,7 +360,15 @@
        */
       assembler: function(){},
       
-      
+      prepare: function(expression){
+         this.defineStage('PREPARE_CYCLE', expression);
+      },
+      finish: function(expression){
+         this.defineStage('FINISH_CYCLE', expression);
+      },
+      defineStage: function(stage, expression){
+         this.stages[stage] = expression;
+      },
       
       
       defFetch: function(){},
@@ -347,7 +386,7 @@
    // ===== ARM Instruction Set =====
    // ===============================
    
-   var ARM_IS = new InstructionSetBuilder({
+   ARM_IS = new InstructionSetBuilder({
       name: 'ARM'
    });
    
