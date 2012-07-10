@@ -1,0 +1,3 @@
+[submodule "lib/ld"]
+	path = lib/ld
+	url = https://github.com/natemago/libdraw.git
