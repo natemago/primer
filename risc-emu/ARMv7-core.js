@@ -307,10 +307,25 @@
          || InstructionSetBuilder.DEFAULT_CYCLE_TEMPLATE;
          
       this.stages = {
-         'PREPARE_CYCLE': '// do nothing',
+         'PREPARE_CYCLE': [
+            // setup the registers for the specified mode
+            'var REGS = this.modes[this.currentMode];'
+         ].join('\n'),
          'FINISH_CYCLE': '// do nothing',
          'CYCLE_COUNT_EXPR': 'this.instructionsCount',
-         'PIPELINE': '// empty loop'
+         'PIPELINE': [
+            '@P_FETCH@',
+            '@P_DECODE@',
+            '@P_EXECUTE@',
+            '@P_WRITE_BACK@'
+         ].join('\n'),
+         'P_FETCH': 'var INST = this.M[this.PC];',
+         'P_DECODE': [
+            'var OP = ;',
+            'var COND = ;'
+          ].join('\n'),
+         'P_EXECUTE': '',
+         'P_WRITE_BACK': ''
       };
       this.pipeline = {};
    };
@@ -324,7 +339,8 @@
             '@FINISH_CYCLE@'
          ].join('\n'),
       'STEP': [].join('\n'),
-      'DEBUG': [].join('\n')   
+      'DEBUG': [].join('\n')
+   };
    
    libDraw.ext(InstructionSetBuilder,{
       
@@ -380,6 +396,16 @@
       },
       defWriteBack: function(){},
       setPhases: function(){}
+   });
+   
+   
+   var ARMInstruction = function(){};
+   libDraw.ext(ARMInstruction, {
+      instr: function(mnemonic, opcode){},
+      decode: function(){},
+      exec: function(){},
+      write: function(){},
+      reg: function(regName){}
    });
    
    // ===============================
