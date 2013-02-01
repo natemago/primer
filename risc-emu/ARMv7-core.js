@@ -68,7 +68,18 @@
    
    */
    
-   
+   /*
+   config properties: 
+      - clock - libDraw.pkg.timer.Clock object. This is the main CPU clock which
+           may be shared with other devices.
+      - clockFreq - if clock is not supplied, you can supply the clock frequency
+          and a default clock will be instantiated.
+      - memory - system memory - this needs to be a Int32Array
+      - memSize - size of the memory, new Int32Array with this size will be 
+          created. Note that the size is in words (32 bit) not bytes.
+      - instructionsPerCycle - how many instructions per cycle to process. The 
+          total MIPS can be calculated as clock.frequency * instructionsPerCycle
+      */
    risc.arm.ARMv7_CPU = function(config){
       var R = new Int32Array(45);
       R.set([
@@ -278,13 +289,56 @@
          }
       };
       
-      risc.arm.ARMv7_CPU.superclass.constructor.call(this, "memory", R, 
+      if(config.clockFreq && !config.clock){
+         config.clock = new libDraw.pkg.timer.Clock({
+               interval: Math.floor(1000/config.clockFreq),
+               mode: 'interval',
+               range: 300 // 3 Hz stats update
+            });
+      }
+      
+      if(!config.clockFreq && !config.clock){
+         throw new Error("No external clock!");
+      }
+      
+      var memory = config.memory || new Int32Array(config.memSize);
+      
+      this.state = risc.arm.ARMv7_CPU.INSTRUCTION_SETS["ARM"];
+      
+      risc.arm.ARMv7_CPU.superclass.constructor.call(this, memory, R, 
          "instructions", config.clock, config.instructionsPerCycle);
+   };
+   
+   risc.arm.ARMv7_CPU.INSTRUCTION_SETS = {
+      "ARM": 0,
+      "Thumb": 1,
+      "ThumbEE": 2,
+      "Jazelle": 3,
+      "JVM": 3
    };
    
    libDraw.ext(risc.arm.ARMv7_CPU, risc.core.CPU,{
       toString: function(){
-         return 'ARMv7 Processor Core';
+         var b = this.bips();
+         var s = 'ARMv7 Processor Core';
+         var es = this.clock.getEstimatedSpeed();
+         if(b && es){
+            s += ' @ ' + es.toFixed(2) + 'Hz [BMIPS: ' + (b/1000000) + ']';
+         }
+         return s;
+      },
+      bips: function(){
+         var s = this.clock.getEstimatedSpeed();
+         if(!isNaN(s) && s!=undefined){
+            return (s*this.instructionsCount);
+         }
+         return undefined;
+      },
+      changeState: function(s){
+         this.state = risc.arm.ARMv7_CPU.INSTRUCTION_SETS[s];
+         if(!this.state){
+            throw new Error("Invalid state: [" + s + "]");
+         }
       }
    });
    
@@ -302,9 +356,9 @@
     */
    var InstructionSetBuilder = function(config){
       libDraw.ext(this, config);
-      this.instructions = {};
+      this.instructions = [];
       this.cycleTemplate = this.cycleTemplate 
-         || InstructionSetBuilder.DEFAULT_CYCLE_TEMPLATE;
+         || InstructionSetBuilder.DEFAULT_CYCLE_TEMPLATES;
          
       this.stages = {
          'PREPARE_CYCLE': [
@@ -319,23 +373,39 @@
             '@P_EXECUTE@',
             '@P_WRITE_BACK@'
          ].join('\n'),
+         
+      };
+      this.pipeline = {
          'P_FETCH': 'var INST = this.M[this.PC];',
-         'P_DECODE': [
-            'var OP = ;',
-            'var COND = ;'
-          ].join('\n'),
-         'P_EXECUTE': '',
+         'P_DECODE': '@set.decodeProc()@',
+         'P_EXECUTE': [
+            'switch(OP){',
+               '#for(var i = 0; i < set.instructions.length; i++){#',
+                  'case @set.instructions[i].opcode@:{',
+                     '@set.instructions[i].procedure(type)@',
+                     'break;',
+                  '}',
+               '#}#',
+               'default:{',
+               '  throw new Error("Invalid instruction: " + OP);',
+               '}',
+            '}'
+         ].join('\n'),
          'P_WRITE_BACK': ''
       };
-      this.pipeline = {};
+      this.set = {};
    };
    
    InstructionSetBuilder.DEFAULT_CYCLE_TEMPLATES = {
       'EXECUTION':[
             '@PREPARE_CYCLE@',
+            'var BR_CYCLE = false;',
+            'var BR_OUT = false;',
             'for (var i = 0; i < @CYCLE_COUNT_EXPR@; i++) {',
                '@PIPELINE@',
+               'if(BR_CYCLE)break;',
             '}',
+            'if(BR_OUT)return;',
             '@FINISH_CYCLE@'
          ].join('\n'),
       'STEP': [].join('\n'),
@@ -348,11 +418,20 @@
        * @method build - builds the "cycle" method for the virtual CPU for
        *                   this instruction set.
        */
-      build: function(mode){
+      build: function(mode, iSet){
          var cycleTemplate = new x.util.Template({
-            template: this.cycleTemplate
+            template: this.cycleTemplate[mode]
          });
          var stagesContext = libDraw.ext({},this.stages);
+         stagesContext["set"] = this.sets[iSet];
+         stagesContext["type"] = mode;
+         libDraw.each(this.pipeline, function(t,pn){
+            var tx = new x.util.Template({template: t});
+            stagesContext[pn] = tx.merge(stagesContext);
+         }, this);
+         stagesContext["PIPELINE"] = 
+            (new x.util.Template({template:this.stages["PIPELINE"]})).
+               merge(stagesContext);
          
          var cycleBody = cycleTemplate.merge(stagesContext);
          try{
@@ -386,7 +465,6 @@
          this.stages[stage] = expression;
       },
       
-      
       defFetch: function(){},
       defDecode: function(){},
       defExecute: function(){},
@@ -399,22 +477,116 @@
    });
    
    
-   var ARMInstruction = function(){};
+   var ARMInstruction = function(config){
+      libDraw.ext(this, config);
+   };
    libDraw.ext(ARMInstruction, {
-      instr: function(mnemonic, opcode){},
       decode: function(){},
       exec: function(){},
       write: function(){},
-      reg: function(regName){}
+      reg: function(regName){},
+      procedure: function(){}
+   });
+   
+   
+   var ARM_InstructionSetsBuilder = function(config){
+      ARM_InstructionSetsBuilder.superclass.constructor.call(this, config);
+      this.pipeline["DECODE"] = [
+         'var cond = (INST & 0xF0000000)>>28;',
+         'var grp  = (INST & 0x0E000000)>>25;', // ARM group ...
+      ].join('\n');
+      this.name = "ARM";
+      this.instructions = [];
+   };
+   
+   libDraw.ext(ARM_InstructionSetsBuilder, InstructionSetBuilder);
+   libDraw.ext(ARM_InstructionSetsBuilder, {
+      adddpm: function(mnem, cond, op, op1, op2, proc, ex){
+         var cfg = {
+            mnemonic: mnem,
+            condition: cond,
+            op: op,
+            op1: op1,
+            op2: op2,
+            proc: proc,
+            group: 0x0 | op // 0b00[0] and 0b00[1]
+         };
+         libDraw.ext(cfg, ext || {});
+         this.instructions.push(new ARMInstruction(cfg));
+      },
+      addls: function(mnem, cond, A, op1, Rn, B, proc, ex){
+         var cfg = {
+            mnemonic: mnem,
+            condition: cond,
+            A: A,
+            op1: op1,
+            Rn: Rn,
+            B: B,
+            proc: proc,
+            group: 0x1 | A // 0b00[0] and 0b00[1]
+         };
+         libDraw.ext(cfg, ext || {});
+         this.instructions.push(new ARMInstruction(cfg));
+      },
+      addmedia: function(mnem, cond, op1, Rd, op2, Rn, proc, ex){
+         var cfg = {
+            mnemonic: mnem,
+            condition: cond,
+            op1: op1,
+            Rd: Rd,
+            op2: op2,
+            Rn: Rn,
+            proc: proc,
+            group: 0x3 // 0b011
+         };
+         libDraw.ext(cfg, ext || {});
+         this.instructions.push(new ARMInstruction(cfg));
+      },
+      addbranch: function(mnem, op, Rn, R, proc, ex){
+         var cfg = {
+            mnemonic: mnem,
+            condition: cond,
+            op: op,
+            Rn: Rn,
+            R: R,
+            proc: proc,
+            group: 0x1 | A // 0b00[0] and 0b00[1]
+         };
+         libDraw.ext(cfg, ext || {});
+         this.instructions.push(new ARMInstruction(cfg));
+      },
+      addcop: function(mnem, cond, op1, Rn, coproc, op, proc, ex){
+         var cfg = {
+            mnemonic: mnem,
+            condition: cond,
+            op: op,
+            op1: op1,
+            Rn: Rn,
+            coproc: coproc,
+            proc: proc,
+            group: 0x1 | A // 0b00[0] and 0b00[1]
+         };
+         libDraw.ext(cfg, ext || {});
+         this.instructions.push(new ARMInstruction(cfg));
+      },
+      adduncond:function(mnem, op1, Rn, op, proc, ex){
+         var cfg = {
+            mnemonic: mnem,
+            condition: 0xF, // 0b1111
+            op1: op1,
+            Rn: Rn,
+            op: op,
+            proc: proc,
+            group: 0x1 | A // 0b00[0] and 0b00[1]
+         };
+         libDraw.ext(cfg, ext || {});
+         this.instructions.push(new ARMInstruction(cfg));
+      }
    });
    
    // ===============================
    // ===== ARM Instruction Set =====
    // ===============================
-   
-   ARM_IS = new InstructionSetBuilder({
-      name: 'ARM'
-   });
    
    
    // -------------------------------
