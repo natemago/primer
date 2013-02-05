@@ -348,267 +348,76 @@
    // --------------------------------------------------------------------------
    
    
-   /* Build uppon the following generalized pipeline phases:
-       1. Fetch
-       2. Decode
-       3. Execute
-       4. Write Back
+   /* 
+      Pseudo-code:
+      
+      switch(this.state){
+         case ARM:
+            decode_arm
+            switch(arm.grp){
+               case grp0:
+                  decode_opcode
+                  switch (opcode):{
+                     case instr0:
+                        execute_instr
+                        break;
+                  }
+                  break;
+               case grp1:
+                  decode_opcode
+                  switch (opcode):{
+                     case instr0:
+                        execute_instr
+                        break;
+                  }
+                  break;
+            }
+            break;
+         case Thumb:
+            
+            break;
+         case ThumbEE:
+            
+            break;
+      }
+      
     */
    var InstructionSetBuilder = function(config){
       libDraw.ext(this, config);
-      this.instructions = [];
-      this.cycleTemplate = this.cycleTemplate 
-         || InstructionSetBuilder.DEFAULT_CYCLE_TEMPLATES;
-         
-      this.stages = {
-         'PREPARE_CYCLE': [
-            // setup the registers for the specified mode
-            'var REGS = this.modes[this.currentMode];'
-         ].join('\n'),
-         'FINISH_CYCLE': '// do nothing',
-         'CYCLE_COUNT_EXPR': 'this.instructionsCount',
-         'PIPELINE': [
-            '@P_FETCH@',
-            '@P_DECODE@',
-            '@P_EXECUTE@',
-            '@P_WRITE_BACK@'
-         ].join('\n'),
-         
-      };
-      this.pipeline = {
-         'P_FETCH': 'var INST = this.M[this.PC];',
-         'P_DECODE': '@set.decodeProc()@',
-         'P_EXECUTE': [
-            'switch(OP){',
-               '#for(var i = 0; i < set.instructions.length; i++){#',
-                  'case @set.instructions[i].opcode@:{',
-                     '@set.instructions[i].procedure(type)@',
-                     'break;',
-                  '}',
-               '#}#',
-               'default:{',
-               '  throw new Error("Invalid instruction: " + OP);',
-               '}',
-            '}'
-         ].join('\n'),
-         'P_WRITE_BACK': ''
-      };
-      this.set = {};
+      this.sets = {};
    };
    
-   InstructionSetBuilder.DEFAULT_CYCLE_TEMPLATES = {
-      'EXECUTION':[
-            '@PREPARE_CYCLE@',
-            'var BR_CYCLE = false;',
-            'var BR_OUT = false;',
-            'for (var i = 0; i < @CYCLE_COUNT_EXPR@; i++) {',
-               '@PIPELINE@',
-               'if(BR_CYCLE)break;',
-            '}',
-            'if(BR_OUT)return;',
-            '@FINISH_CYCLE@'
-         ].join('\n'),
-      'STEP': [].join('\n'),
-      'DEBUG': [].join('\n')
-   };
-   
-   libDraw.ext(InstructionSetBuilder,{
-      
-      /**
-       * @method build - builds the "cycle" method for the virtual CPU for
-       *                   this instruction set.
-       */
-      build: function(mode, iSet){
-         var cycleTemplate = new x.util.Template({
-            template: this.cycleTemplate[mode]
-         });
-         var stagesContext = libDraw.ext({},this.stages);
-         stagesContext["set"] = this.sets[iSet];
-         stagesContext["type"] = mode;
-         libDraw.each(this.pipeline, function(t,pn){
-            var tx = new x.util.Template({template: t});
-            stagesContext[pn] = tx.merge(stagesContext);
-         }, this);
-         stagesContext["PIPELINE"] = 
-            (new x.util.Template({template:this.stages["PIPELINE"]})).
-               merge(stagesContext);
-         
-         var cycleBody = cycleTemplate.merge(stagesContext);
-         try{
-            /*
-             * Build with the __RCT paramater
-             *   - __RCT - (Realtime Clock Tick) the clock tick number of the real clock...
-             */ 
-            var cycle = new Function('__RCT', cycleBody);
-            console.log('Cycle Body:\n', cycleBody);
-            console.log('Cycle function:\n', cycle);
-            return cycle;
-         }catch(ex){
-            throw ex;
-         }
-         return undefined;
-      },
-      
-      /**
-       * @method assembler - generates the assembler/disassembler for this 
-       *                     instruction set.
-       */
-      assembler: function(){},
-      
-      prepare: function(expression){
-         this.defineStage('PREPARE_CYCLE', expression);
-      },
-      finish: function(expression){
-         this.defineStage('FINISH_CYCLE', expression);
-      },
-      defineStage: function(stage, expression){
-         this.stages[stage] = expression;
-      },
-      
-      defFetch: function(){},
-      defDecode: function(){},
-      defExecute: function(){},
-      // defExecute alias
-      def: function(){
-         this.defExecute.apply(this, arguments);
-      },
-      defWriteBack: function(){},
-      setPhases: function(){}
+   libDraw.ext(InstructionSetBuilder, {
+      compile: function(mode){},
+      addSet: function(set){}
    });
    
-   
-   var ARMInstruction = function(config){
+   var InstructionSet = function(config){
       libDraw.ext(this, config);
    };
-   libDraw.ext(ARMInstruction, {
-      decode: function(){},
-      exec: function(){},
-      write: function(){},
-      reg: function(regName){},
-      procedure: function(){}
+   
+   libDraw.ext(InstructionSet, {
+      /**
+       * Compiles the instruction set procedure for the specified mode
+       * @param mode - the mode of operation: 'debug', 'step', etc...
+       */
+      compile: function(mode){},
+      /**
+       * @method addi - adds new instruction
+       */
+      addi: function(){},
+      assembler: function(){}
    });
    
-   
-   var ARM_InstructionSetsBuilder = function(config){
-      ARM_InstructionSetsBuilder.superclass.constructor.call(this, config);
-      this.pipeline["DECODE"] = [
-         'var cond = (INST & 0xF0000000)>>28;',
-         'var grp  = (INST & 0x0E000000)>>25;', // ARM group ...
-      ].join('\n');
-      this.name = "ARM";
-      this.instructions = [];
+   var ARMInstructionSet = function(config){
+      ARMInstructionSet.superclass.constructor.call(this, config);
    };
    
-   libDraw.ext(ARM_InstructionSetsBuilder, InstructionSetBuilder);
-   libDraw.ext(ARM_InstructionSetsBuilder, {
-      adddpm: function(mnem, cond, op, op1, op2, proc, ex){
-         var cfg = {
-            mnemonic: mnem,
-            condition: cond,
-            op: op,
-            op1: op1,
-            op2: op2,
-            proc: proc,
-            group: 0x0 | op // 0b00[0] and 0b00[1]
-         };
-         libDraw.ext(cfg, ext || {});
-         this.instructions.push(new ARMInstruction(cfg));
-      },
-      addls: function(mnem, cond, A, op1, Rn, B, proc, ex){
-         var cfg = {
-            mnemonic: mnem,
-            condition: cond,
-            A: A,
-            op1: op1,
-            Rn: Rn,
-            B: B,
-            proc: proc,
-            group: 0x1 | A // 0b00[0] and 0b00[1]
-         };
-         libDraw.ext(cfg, ext || {});
-         this.instructions.push(new ARMInstruction(cfg));
-      },
-      addmedia: function(mnem, cond, op1, Rd, op2, Rn, proc, ex){
-         var cfg = {
-            mnemonic: mnem,
-            condition: cond,
-            op1: op1,
-            Rd: Rd,
-            op2: op2,
-            Rn: Rn,
-            proc: proc,
-            group: 0x3 // 0b011
-         };
-         libDraw.ext(cfg, ext || {});
-         this.instructions.push(new ARMInstruction(cfg));
-      },
-      addbranch: function(mnem, op, Rn, R, proc, ex){
-         var cfg = {
-            mnemonic: mnem,
-            condition: cond,
-            op: op,
-            Rn: Rn,
-            R: R,
-            proc: proc,
-            group: 0x1 | A // 0b00[0] and 0b00[1]
-         };
-         libDraw.ext(cfg, ext || {});
-         this.instructions.push(new ARMInstruction(cfg));
-      },
-      addcop: function(mnem, cond, op1, Rn, coproc, op, proc, ex){
-         var cfg = {
-            mnemonic: mnem,
-            condition: cond,
-            op: op,
-            op1: op1,
-            Rn: Rn,
-            coproc: coproc,
-            proc: proc,
-            group: 0x1 | A // 0b00[0] and 0b00[1]
-         };
-         libDraw.ext(cfg, ext || {});
-         this.instructions.push(new ARMInstruction(cfg));
-      },
-      adduncond:function(mnem, op1, Rn, op, proc, ex){
-         var cfg = {
-            mnemonic: mnem,
-            condition: 0xF, // 0b1111
-            op1: op1,
-            Rn: Rn,
-            op: op,
-            proc: proc,
-            group: 0x1 | A // 0b00[0] and 0b00[1]
-         };
-         libDraw.ext(cfg, ext || {});
-         this.instructions.push(new ARMInstruction(cfg));
+   libDraw.ext(ARMInstructionSet, InstructionSet);
+   libDraw.ext(ARMInstructionSet, {
+      addi: function(group, cnf){
+         
       }
    });
-   
-   // ===============================
-   // ===== ARM Instruction Set =====
-   // ===============================
-   
-   
-   // -------------------------------
-   
-   
-   // ===============================
-   // ==== Thumb Instruction Set ====
-   // ===============================
-   
-   
-   
-   
-   // -------------------------------
-   
-   // ===============================
-   // === ThumbEE Instruction Set ===
-   // ===============================
-   
-   
-   
-   
-   // -------------------------------
-   
    
 })(jQuery);
