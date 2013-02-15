@@ -406,18 +406,11 @@
        * @method addi - adds new instruction
        */
       addi: function(){},
-      assembler: function(){}
+      assembler: function(){},
+      disassembler: function(){}
    });
    
-   var ARMInstructionSet = function(config){
-      ARMInstructionSet.superclass.constructor.call(this, config);
-   };
-   
-   libDraw.ext(ARMInstructionSet, InstructionSet);
-   libDraw.ext(ARMInstructionSet, {
-      addi: function(group, cnf){
-         
-      }
-   });
+   risc.arm.InstructionSet = InstructionSet;
+   risc.arm.InstructionSetBuilder = InstructionSetBuilder;
    
 })(jQuery);
