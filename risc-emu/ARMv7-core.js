@@ -314,7 +314,7 @@
       "Thumb": 1,
       "ThumbEE": 2,
       "Jazelle": 3,
-      "JVM": 3
+      "JVM": 4
    };
    
    libDraw.ext(risc.arm.ARMv7_CPU, risc.core.CPU,{
