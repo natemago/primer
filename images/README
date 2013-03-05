@@ -1,26 +1,31 @@
 Icons set:
-  * arrow-up
-  * arrow-down
-  * arrow-right
-  * arrow-left
-  * play
-  * pause
-  * stop
-  * power
-  * reset
-  * add
-  * step-next
-  * step-into
-  * step-out (return)
-  * frequency (Hz)
-  * cpu
-  * memory
-  * refresh
-  * bug
-  * clock
-  * settings
-  * vga
+  * arrow-up [done]
+  * arrow-down [done]
+  * arrow-right [done]
+  * arrow-left [done]
+  * play [done]
+  * pause [done]
+  * stop [done]
+  * power [done]
+  * reset [done]
+  * add [done]
+  * step-next [done]
+  * step-into [done]
+  * step-out (return) [done]
+  * frequency (Hz) [done]
+  * cpu [done]
+  * memory [done]
+  * refresh [done]
+  * bug [done]
+  * clock [done]
+  * settings [done]
+  * vga [done]
   * size
   * assemble
   * disassemble
   * tunder
+  
+== Primer color palette ==
+copy the primer.gpl palette file to /usr/share/inkscape/palettes/
+
+  sudo cp primer.gpl /usr/share/inkscape/palettes/
