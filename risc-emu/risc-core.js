@@ -205,58 +205,103 @@
                lineSeparator: String.fromCharCode(13,10) // CR+LF
             }
          },
+         getIndex: function(variant){
+            if(!risc.utils.b64.VARIANTS_INDEX){
+                risc.utils.b64.VARIANTS_INDEX = {};
+            }
+            var index = risc.utils.b64.VARIANTS_INDEX[variant];
+            if(!index){
+                index = risc.utils.b64.VARIANTS_INDEX[variant] = {};
+                
+                var alphabet = risc.utils.b64.VARIANTS[variant].alphabet;
+                for(var i = 0; i < alphabet.length; i++){
+                    index[alphabet[i]]=i;
+                }
+                index[risc.utils.b64.VARIANTS[variant].padding]=0;
+            }
+            return index;
+         },
+         /*
+Base 64 encoding scheme
+
+        byte 1                   byte 2                  byte 3
+        [ 7 6 5 4 3 2     1 0 ] [ 7 6 5 4     3 2 1 0 ] [ 7 6     5 4 3 2 1 0 ]
+        [ 5 4 3 2 1 0 ] [ 5 4     3 2 1 0 ] [ 5 4 3 2     1 0 ] [ 5 4 3 2 1 0 ] 
+        c1               c2                  c3                  c4
+         */
          encode: function(barr, variant){ // encode byte array
             variant = variant || 'mime';
             var padChar = risc.utils.b64.VARIANTS[variant].padding;
             var alphabet = risc.utils.b64.VARIANTS[variant].alphabet;
             var newLine = risc.utils.b64.VARIANTS[variant].lineSeparator;
             var maxLine = risc.utils.b64.VARIANTS[variant].maxLine;
-            var r = '';
-            var padding = "";
-            var p = 0;
-            if(barr.length%3 == 1){
-               padding = padChar+padChar;
-               p = 2;
-            }else if (barr.length%3 == 2) {
-               padding = padChar;
-               p=1;
+            var padding = 3 - (barr.length % 3);
+           //debugger
+            var lines = [];
+            var i = 0;
+            var line = '';
+            do{
+                var b = [];
+                var j = 3;
+                while(j--){
+                    b[j]=(i+j) < barr.length ? barr[(i+j)] : 0;
+                }
+                var c1 = (b[0]>>2)&0x3F;
+                var c2 = ((b[0]&0x3)<<4)|((b[1]>>4)&0xF);
+                var c3 = ((b[1]&0xF)<<2) | ((b[2]>>4)&0x3);
+                var c4 = b[2]&0x3F;
+                if( (line.length + 4) >= maxLine){
+                    lines.push(line);
+                    line = '';
+                }
+                line+=(alphabet[c1]+alphabet[c2]+alphabet[c3]+alphabet[c4]);      
+                i+=3;
+            }while(i < barr.length);
+            
+            if( (barr.length % 3) != 0 ){
+                line = line.substring(0, line.length -padding);
+                line += (padding == 2 ? padChar+padChar : padChar);
             }
             
-            var retval = [], line= "",v=0;
-            
-            for(var  i =0; i < barr.length; i++){
-               v|=barr[i];              
-               if((i+1)%3==0){
-                  for(j=3;j>=0;j--){
-                     r=alphabet[(v>>(6*j))&0x3f];
-                     line+=r;
-                     if(line.length == maxLine){
-                        retval.push(line);
-                        line="";
-                     }               
-                  }
-                  v=0;
-               }
-               v<<=8;
-            }
-            if(p!=0){
-               for(var i = 3; i >= p; i--){
-                  r=alphabet[(v>>(6*i))&0x3f];
-                  line+=r;
-                  if(line.length == maxLine){
-                     retval.push(line);
-                     line="";
-                  }
-               }
+            if(line.length){
+                lines.push(line);
             }
             
-            if(line != ""){
-               retval.push(line);
-            }
-            return retval.join(newLine)+padding;
+            return lines.join(newLine);
          },
-         decode: function(str, variant){
-            
+         decode: function(str, variant, lineSeparator){
+            variant = variant || 'mime';
+            var padChar = risc.utils.b64.VARIANTS[variant].padding;
+            var alphabet = risc.utils.b64.VARIANTS[variant].alphabet;
+            lineSeparator = lineSeparator || 
+                risc.utils.b64.VARIANTS[variant].lineSeparator;
+                
+                
+            str = str.split(lineSeparator).join('');
+            var barr = [];
+            if( (str.length % 4) != 0 ){
+                throw new Error("Invalid Base 64 encoded string.");
+            }
+            var index = risc.utils.b64.getIndex(variant);
+            for(var i = 0; i < str.length; i+=4){
+                
+                var c1 = index[str[i]];
+                var c2 = index[str[i + 1]];
+                var c3 = index[str[i + 2]];
+                var c4 = index[str[i + 3]];
+                
+                barr.push( (c1<<2) | (c2>>4) );             // byte 1
+                barr.push( ((c2&0xF)<<4) | ((c3>>2)&0xF) ); // byte 2
+                barr.push( ( (c3&0x3)<<6 ) | (c4&0x3F) );   // byte 3
+                
+            }
+            var paddCount = 0;
+            if(str[str.length-1] == padChar) paddCount++;
+            if(str[str.length-2] == padChar) paddCount++;
+            if(paddCount > 0 ){
+                return barr.slice(0, barr.length - paddCount);
+            }
+            return barr;
          }
          
       }
