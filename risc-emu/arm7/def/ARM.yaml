@@ -1,0 +1,11 @@
+---
+set: ARM
+
+
+instructions:
+    -   name: ADD
+        format: 0100101010101001xx{r3:6}
+        syntax: ADD <Rn> <Rout> {some-immediate value}
+        body: |
+            this is some large
+            isntruction body executale
