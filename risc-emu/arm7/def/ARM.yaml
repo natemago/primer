@@ -1,11 +1,55 @@
 ---
 set: ARM
-
-
+procedure: |
+    /* ARM Decode*/
+    var cond = (instruction>>28) & 0xF;
+    
+    if( cond == 0xFF){
+        /* unconditional instructions */
+        var op1 = (instruction>>20) & 0x7F;
+        switch ( op1 ){
+        #for(var i = 0, instruction; instruction = unconditionals[i]; i++){#
+            case 0x@ risc.utils.toHex(instruction.op1, 2) @:
+                @instruction.procedure()@
+                break;
+        #}#
+        }
+        
+    }else{
+        var grp  = (instruction>>26) & 0x3;
+        var op1  = (instruction>>20) & 0x1F;
+        switch (grp) {
+            #for(var i = 0, group; group = groups[i]; i++){#
+            case 0x@ risc.utils.toHex(group.opcode, 2) @:
+                switch ( op1 ){
+                #for(var j = 0, instruction = group.instructions[j]; j++) {#
+                    case 0x@ risc.utils.toHex(instruction.op1, 2) @:
+                        @instruction.procedure()@
+                        break;
+                #}#
+                }
+                break;
+            #}#
+        }
+    }
+helpers:
+    decodeRn: var Rn = (instruction >> 16) & 0xF;
+    
+    
 instructions:
-    -   name: ADD
-        format: 0100101010101001xx{r3:6}
-        syntax: ADD <Rn> <Rout> {some-immediate value}
+    -   name: ADC
+        format: {cond:4}0010101{S:1}{Rn:4}{Rd:4}{imm12:12}
+        syntax: ADC{S}{<c>}{<q>}{<Rd>,} <Rn>, #<const>
         body: |
-            this is some large
-            isntruction body executale
+            if ConditionPassed() then
+                EncodingSpecificOperations();
+                (result, carry, overflow) = AddWithCarry(R[n], imm32, APSR.C);
+                if d == 15 then        // Can only occur for ARM encoding
+                    ALUWritePC(result); // setflags is always FALSE here    
+                else
+                    R[d] = result;
+                    if setflags then
+                        APSR.N = result<31>;
+                        APSR.Z = IsZeroBit(result);
+                        APSR.C = carry;
+                        APSR.V = overflow;
