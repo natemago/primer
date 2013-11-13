@@ -232,7 +232,7 @@
    
    def('risc.utils', ['utils:each'], function(each){
         each(risc.utils, function(utility, name){
-            def('risc.utils.' + utility, [], function() { return utility; } );
+            def('risc.utils.' + name, [], function() { return utility; } );
         });
         return risc.utils;
    });

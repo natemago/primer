@@ -1,6 +1,6 @@
 (function($){
     
-    
+    /*
     risc.core.Instruction = function(config){
         this.init();
     };
@@ -10,5 +10,5 @@
             
         }
     } );
-    
+    */
 })(jQuery);

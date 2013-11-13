@@ -5,8 +5,8 @@
     
     // === risc.core.CPU module ===
     def('risc.core.CPU', // module name
-        ['$','libDraw'], // depends on: $ (jQuery) and libDraw
-        function($, libDraw){
+        ['$','libDraw', 'di:console'], // depends on: $ (jQuery) and libDraw
+        function($, libDraw, console){
             // if you don't want to wrap your code with envelope annonymous 
             // function, this is the place to be used as private workspace.
             
@@ -30,7 +30,7 @@
               
               this.clock.addHandler(this.cycle,this);
            };
-           libDraw.ext(risc.core.CPU,{
+           libDraw.ext(CPU,{
               cycle: function(tick){
                  var instr = 0;
                  var ic = this.instructionsCount;
@@ -83,7 +83,8 @@
               
            });
             
-            
+            console.debug('Module CPU initalized');
+             alert('madlak');      
             // this is how we expose the module to the context      
             return CPU;
         }
