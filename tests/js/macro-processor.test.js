@@ -3,12 +3,19 @@ def('risc.core.MacroProcessorTest',
     mp = new MacroProcessor({});
     
     testFn = function(a1, a2, a3){
-        var a14;
-        a1+=3;
+        var a1;
+        a1+=a3;
         return a2;
     };
     
     console.log(testFn.toString());
-    mp.process(testFn, {}, {});
+    macro = mp.process(testFn, 'test_macro',{});
     
+    var str = [
+        'this is the firs line();',
+        'a1+=a3;test_macro   (pavle, mavle, "33");',
+        'final line'
+    ].join('\n');
+    
+    console.log(macro.expand(str));
 });

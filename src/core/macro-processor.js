@@ -46,34 +46,35 @@ def('risc.core.MacroProcessor',
         }
     });
     
-    
+    var RE_MACRO_ARG = '\\s*([\\w\\d\\.\\$\\[\\]\'"_]+)';
     var Macro = function(config){
         libDraw.ext(this, config);
+        this.RE_MACRO_ARG = this.RE_MACRO_ARG || RE_MACRO_ARG;
         this.compile();
     };
     
     libDraw.ext(Macro, {
-        RE_MACRO_ARG: '\\s?([\\w\\d\\.\\$\\[\\]_]+)',
         compile: function(){
             if(this.compiled){
                 return;
             }
             this.compiled = true;
-            this.buildRE();
+            this._buildRE();
         },
         _buildRE: function(){
-            var reStr = [this.name, '\\s?\\('];
+            var self = this;
+            var reStr = [this.name, '\\s*\\('];
             reStr.push(this.arguments.map(function(arg){
-                return Macro.RE_MACRO_ARG;
-            }).join(','));
-            reStr.push('\\s\\)');
+                return self.RE_MACRO_ARG;
+            }).join('\\s*,'));
+            reStr.push('\\s*\\)\\s*;?');
             this.regExpString = reStr.join('');
             this.argsRegExps = {};
             libDraw.each(this.arguments, function(argName){
                 this.argsRegExps[argName] = '\\b'+argName+'\\b';
-            });
+            }, this);
         },
-        getRegRxp: function(modifiers){
+        getRegExp: function(modifiers){
             return new RegExp(this.regExpString, modifiers || 'mg');
         },
         expand: function(str){
@@ -92,7 +93,7 @@ def('risc.core.MacroProcessor',
             var str = match.substring(match.indexOf('(') + 1, 
                 match.lastIndexOf(')') );
             // map arg name -> replacement
-            var argRe = new RegExp(Macro.RE_MACRO_ARG, 'gm');
+            var argRe = new RegExp(this.RE_MACRO_ARG, 'gm');
             var ma, argMapping = {};
             var  i = 0;
             while( (ma = argRe.exec(str)) !== null ){
