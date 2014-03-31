@@ -1,7 +1,9 @@
-def('risc.core.UnitTest',['jQuery','libDraw'], function(){
+def('unit:test',['jQuery','libDraw', 'unit:core:log-writer'], 
+function($, libDraw, writer){
     // Logger
     var Logger = function(config){
         libDraw.ext(this, config);
+        this.logLevel = this.logLevel || Logger.LEVELS['warning'];
     };
     
     Logger.LEVELS = {
@@ -17,9 +19,20 @@ def('risc.core.UnitTest',['jQuery','libDraw'], function(){
             if(this.logLevel >= level){
                 this._write(message, level);
             }
+        },
+        _write: function(message, level){
+            writer.writeLn(message);
         }
     });
-    // UI
+    
+    libDraw.each(Logger.LEVELS, function(level){
+        var ex = {};
+        ex[level] = function(){
+            var message = Array.prototype.join.call(arguments, '');
+            this._log(message, Logger.LEVELS[level]);
+        };
+        libDraw.ext(Logger, ex);
+    });
     
     // Test Suite
     
