@@ -12,41 +12,52 @@ function($, libDraw){
 
     var TestsLog = function(config){
         libDraw.ext(this, config);
-        this.el = $([].join('<div class="unit-tests-log"></div>'))[0];
-        libDraw.each(this.cssRules, function(ruleBody, rule){
-             $("<style>")
-                .prop("type", "text/css")
-                .html([
+        this.el = $(['<div class="unit-tests-log"></div>'].join(''))[0];
+        var self = this;
+        this.cssRules = {};
+        libDraw.ext(this.cssRules, DEFAULT_RULES);
+        libDraw.ext(this.cssRules, config.cssRules || {});
+        $(document).ready(function(){
+            var rules = [];
+            libDraw.each(self.cssRules, function(ruleBody, rule){
+                 rules.push([
                     rule, '{',
-                    body,
+                    ruleBody,
                     '}'
-                ].join(''))
+                ].join(''));
+            }, self);
+            $("<style>")
+                .prop("type", "text/css")
+                .html(rules.join(''))
                 .appendTo("head");
-        }, this);
-        $(document.body).append(this.el);
+            $(document.body).append(self.el);
+        });
     };
     
     libDraw.ext(TestsLog, {
         write: function(message, extraClass, extraStyle){
             $(this.el).append('<span class="tests-log-output '+
-                (extraClass || '' )+'" style="'+(extraStyle||'')+'">' + message 
+                (extraClass || '' )+'" style="'+(extraStyle||'')+'">' + this.toHTML(message) 
                 + '</span>'); 
         },
         writeLn: function(message, extraClass, extraStyle){
             $(this.el).append('<div class="tests-log-output tests-log-line'+
-                (extraClass || '' )+'" style="'+(extraStyle||'')+'">' + message 
+                (extraClass || '' )+'" style="'+(extraStyle||'')+'">' + this.toHTML(message) 
                 + '</div>');
+        },
+        toHTML: function(str){
+            return str.replace(/\n/gm, '<br />').replace(/\t/gm, '&nbsp;&nbsp;&nbsp;&nbsp;');
         }
     });
     
-
-    return {
-        TestsLog: TestsLog
-    };
     
     var __testsLogWriter = new TestsLog({});
     def('unit:core:log-writer', [], function(){
         return __testsLogWriter;
     });
+    
+    return {
+        TestsLog: TestsLog
+    };
     
 });

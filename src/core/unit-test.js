@@ -1,5 +1,6 @@
-def('unit:test',['jQuery','libDraw', 'unit:core:log-writer'], 
-function($, libDraw, writer){
+def('unit:test',
+['jQuery','libDraw', 'unit:core:log-writer', 'risc.core.error', 'unit:ui'], 
+function($, libDraw, writer, errors, ui){
     // Logger
     var Logger = function(config){
         libDraw.ext(this, config);
@@ -25,11 +26,11 @@ function($, libDraw, writer){
         }
     });
     
-    libDraw.each(Logger.LEVELS, function(level){
+    libDraw.each(Logger.LEVELS, function(value, level){
         var ex = {};
         ex[level] = function(){
             var message = Array.prototype.join.call(arguments, '');
-            this._log(message, Logger.LEVELS[level]);
+            this._log(message, value);
         };
         libDraw.ext(Logger, ex);
     });
@@ -40,30 +41,135 @@ function($, libDraw, writer){
             inOrder: [],
             all: {}
         };
-        
+        this.log = new Logger({});
     };
     
     libDraw.ext(TestRunner, {
-        addSuite: function(suiteName, description, suite, testSetup, testTeardown){
-        
+        addSuite: function(suiteName, description, suite, 
+            testSetup, testTeardown, stopOnException){
+            var testSuite = new TestSuite({
+                name: suiteName,
+                description: description,
+                testSetup: testSetup,
+                testTearDown: testTeardown,
+                stopOnException: stopOnException,
+                log: this.log
+            });
+            var defineTest = function(testName, description, testCase, 
+                setup, tearDown, context){
+                testSuite.addTestCase(testName, description, testCase, setup,
+                    tearDown, context);
+            };
+            suite.call(testSuite, defineTest);
+            this.suites.inOrder.push(suiteName);
+            this.suites.all[suiteName] = testSuite;
         },
         getSuite: function(suiteName){
+            return this.suites.all[suiteName];
         },
-        runSuite: function(suiteName){},
-        runAll: function(){}
+        runSuite: function(suiteName){
+            var suite = this.getSuite(suiteName);
+            if(!suite){
+                this.log.error('Invalid suite: ', suiteName);
+                throw new Error('Invalid suite: ' + suiteName);
+            }
+            this._runSuite(suite);
+        },
+        _runSuite: function(suite){
+            this.log.info(' ** ', suite.name, ' ** ');
+            this.log.info('++++++++++++++++++++++++++++++++++++++++++++++++++');
+            this.log.info(suite.description);
+            this.log.info('\n');
+            suite.runAll();
+            this.log.info('\n');
+        },
+        runAll: function(){
+            libDraw.each(this.suites.inOrder, function(suite){
+                this._runSuite(this.suites.all[suite]);
+            }, this);
+        }
     });
     
     var TestSuite = function(config){
-        libDraw.ext(this, config);    
+        libDraw.ext(this, config);
+        this.tests = {
+            inOrder: [],
+            all: {}
+        };
+        this.report = new Report();
     };
     
     libDraw.ext(TestSuite, {
-        addTestCase: function(testCaseName, description, testCase){},
+        addTestCase: function(testCaseName, description, testCase, 
+            setup, tearDown, context){
+            var test = new TestCase({
+                name: testCaseName,
+                description: description,
+                testCase: testCase,
+                log: this.log,
+                setup: setup || this.testSetup || function(){},
+                tearDown: tearDown || this.testTearDown || function(){},
+                testContext: context
+            });
+            this.tests.inOrder.push(testCaseName);
+            this.tests.all[testCaseName] = test;
+        },
         getTest: function(name){
-        
+            return this.tests.all[name];
         },
         runTest: function(testCaseName){
-        
+            var report = new Report();
+            try{
+                this._runTestWithReport(testCaseName, report, 1);
+            }catch(e){
+                
+            }
+            this._printSummary(report);
+            return report;
+        },
+        _printSummary: function(report){
+            var l = this.log, s = report.getStatistics();
+            l.info('\nSummary:');
+            l.info(' Total tests run: ', s.total);
+            l.info(' - passed: ', s.passed);
+            l.info(' - failed: ', s.failed);
+            l.info('--------------------------------------------------');
+            l.info('\n');
+        },
+        _runTestWithReport: function(testCaseName, report, cnt){
+            var test = this.getTest(testCaseName);
+            if(!test){
+                this.log.error('No such test: ', testCaseName);
+                throw new errors.BaseError('No such test: ' + testCaseName);
+            }
+            this.log.info('(',cnt,')', 'Running test: ', testCaseName);
+            this.log.info('--------------------------------------------------');
+            this.log.info('\t', test.description);
+            this.log.info('-------------------------------------------------');
+            try{
+                test.run();
+                report.testSuccess(testCaseName);
+                this.log.info('STATUS: PASSED\n');
+            }catch(e){
+                report.testFailed(testCaseName, e);
+                this.log.info('STATUS: FAILED\n');
+                if(!this.stopOnException){
+                    throw e;
+                }
+            }
+            this.log.info('\n');
+        },
+        runAll: function(){
+            var report = new Report();
+            try{
+                libDraw.each(this.tests.inOrder, function(testName, k, cnt){
+                    this._runTestWithReport(testName, report, cnt+1);
+                }, this);
+            }catch(e){
+                
+            }
+            this._printSummary(report);
+            return report;
         }
     });
     
@@ -74,28 +180,95 @@ function($, libDraw, writer){
     libDraw.ext(TestCase, {
         run: function(){
             var self = this;
-            var assert = function( value, errorMessage) {
+            var assert = function(value, errorMessage) {
                 if(!value){
                     self.reportError(errorMessage);
-                    throw new Error('Assert failed: ' + errorMessage);
+                    throw new errors.BaseError('Assert failed: ' + errorMessage);
                 }
             };
             try{
-                this.testCase.call(this.testContext, assert, this.logger);
+                this.setup.call(this.testContext, assert, this.log);
+                this.testCase.call(this.testContext, assert, this.log);
+                this.tearDown.call(this.testContext, assert, this.log);
             }catch(e){
-                
+                self.reportError(e.message, new errors.BaseError(e.message, e));
+                throw new errors.BaseError('Unexpected error: ' + e.message);
             }
         },
-        reportError: function(errorMsg){
-            
+        reportError: function(errorMsg, err){
+            this.log.error(errorMsg);
+            if(err){
+                this.log.error('Error: ', err.message);
+                this.log.error('Stack trace: ', err.stack);
+            }
         }
     });
     
-    var Report = function(){};
+    var Report = function(){
+        this.tests = {};
+        this.testsInOrder = [];
+        this.stats = {
+            passed: 0,
+            failed: 0
+        };
+    };
     
     libDraw.ext(Report, {
-        testSuccess: function(testName){},
-        testFailed: function(testName, message){}
-        getStatistics: function(){}
+        _getTestStats: function(testName){
+            if(!this.tests[testName]){
+                this.tests[testName] = {
+                    success: false,
+                    message : ''
+                };
+                this.testsInOrder.push(testName);
+            }
+            return this.tests[testName];
+        },
+        testSuccess: function(testName){
+            this._getTestStats(testName).success = true;
+            this.stats.passed++;
+        },
+        testFailed: function(testName, error){
+            var testStats = this._getTestStats(testName);
+            testStats.success = false;
+            testStats.error = error;
+            this.stats.failed++;
+        },
+        getStatistics: function(){
+            return {
+                passed: this.stats.passed,
+                failed: this.stats.failed,
+                total: this.stats.passed+this.stats.failed,
+                details: (function(r){
+                    var details = [];
+                    libDraw.each(r.testsInOrder, function(testName){
+                        var err = r.tests[testName].error;
+                        details.push({
+                            passed: r.tests[testName].status,
+                            message: err ? err.message : '',
+                            error: err
+                        });
+                    });
+                    return details;
+                })(this)
+            };
+        }
     });
+    
+    // the default test runner and shortcuts
+    var __defaultRunner = new TestRunner({
+        
+    });
+    $(document).ready(function(){
+        __defaultRunner.runAll();
+    });
+    var defineSuite = function(suiteName, description,
+        theSuite, commonSetup, commonTearDown, stopOnError){
+            __defaultRunner.addSuite(suiteName, description,
+        theSuite, commonSetup, commonTearDown, stopOnError);
+    };
+    
+    def('unit:test:suite', [], function(){ return defineSuite;});
+    
+    return {};
 });
