@@ -7,7 +7,12 @@ function($, libDraw){
             "font-family: monospace;",
             "font-size: 10px;",
             "padding: 5px;"
-        ].join('')
+        ].join(''),
+        ".out-error": "color: #AA0000;",
+        ".out-warn": "color: #AAAA00;",
+        ".out-debug": "color: #999;",
+        ".out-trace": "color: #AAA;",
+        ".out-success": "color: #0A0;"
     };
 
     var TestsLog = function(config){
@@ -41,7 +46,7 @@ function($, libDraw){
                 + '</span>'); 
         },
         writeLn: function(message, extraClass, extraStyle){
-            $(this.el).append('<div class="tests-log-output tests-log-line'+
+            $(this.el).append('<div class="tests-log-output tests-log-line '+
                 (extraClass || '' )+'" style="'+(extraStyle||'')+'">' + this.toHTML(message) 
                 + '</div>');
         },

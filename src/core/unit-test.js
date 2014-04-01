@@ -8,11 +8,20 @@ function($, libDraw, writer, errors, ui){
     };
     
     Logger.LEVELS = {
+        "success": -1,
         "error": 0,
         "info": 1,
         "warning": 2,
         "debug": 3,
         "trace": 4
+    };
+    
+    Logger.EXTRA_STYLE = {
+        "0": "out-error",
+        "2": "out-warn",
+        "3": "out-debug",
+        "4": "out-trace",
+        "-1": "out-success"
     };
     
     libDraw.ext(Logger, {
@@ -22,7 +31,10 @@ function($, libDraw, writer, errors, ui){
             }
         },
         _write: function(message, level){
-            writer.writeLn(message);
+            writer.writeLn(message, Logger.EXTRA_STYLE[level]);
+        },
+        setLevel: function(logLevel){
+            this.logLevel = Logger.LEVELS[logLevel];
         }
     });
     
@@ -46,13 +58,13 @@ function($, libDraw, writer, errors, ui){
     
     libDraw.ext(TestRunner, {
         addSuite: function(suiteName, description, suite, 
-            testSetup, testTeardown, stopOnException){
+            testSetup, testTeardown, stopOnError){
             var testSuite = new TestSuite({
                 name: suiteName,
                 description: description,
                 testSetup: testSetup,
                 testTearDown: testTeardown,
-                stopOnException: stopOnException,
+                stopOnError: stopOnError,
                 log: this.log
             });
             var defineTest = function(testName, description, testCase, 
@@ -149,11 +161,11 @@ function($, libDraw, writer, errors, ui){
             try{
                 test.run();
                 report.testSuccess(testCaseName);
-                this.log.info('STATUS: PASSED\n');
+                this.log.success('STATUS: PASSED\n');
             }catch(e){
                 report.testFailed(testCaseName, e);
-                this.log.info('STATUS: FAILED\n');
-                if(!this.stopOnException){
+                this.log.error('STATUS: FAILED\n');
+                if(this.stopOnError){
                     throw e;
                 }
             }
