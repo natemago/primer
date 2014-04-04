@@ -5,7 +5,7 @@ function($, libDraw){
     var DEFAULT_RULES = {
         ".unit-tests-log": [
             "font-family: monospace;",
-            "font-size: 10px;",
+            "font-size: 12px;",
             "padding: 5px;"
         ].join(''),
         ".out-error": "color: #AA0000;",

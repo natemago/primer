@@ -211,7 +211,8 @@ function($, libDraw, writer, errors, ui){
             this.log.error(errorMsg);
             if(err){
                 this.log.error('Error: ', err.message);
-                this.log.error('Stack trace: ', err.stack);
+                this.log.error('Stack trace: ', err.fullStackTrace ? 
+                        err.fullStackTrace():err.stack);
             }
         }
     });

@@ -10,6 +10,7 @@ function(libDraw, MacroProcessor, util, riscUtils){
     
     var Instruction = function(config){
         libDraw.ext(this, config);
+        this.format = new InstructionFormat(config.format);
     };
     
     
@@ -89,8 +90,8 @@ function(libDraw, MacroProcessor, util, riscUtils){
         this.opcodeMaskHex = riscUtils.toHex(this.opcodeMask, 8);
     };
     
-    fmt = new InstructionFormat("1001 0111 {var1: 4} 1{var2:3} 0000 0000 {last: 8}");
-    
-    return {};
+    return {
+        InstructionFormat: InstructionFormat
+    };
     
 });
