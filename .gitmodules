@@ -1,3 +1,6 @@
 [submodule "lib/ld"]
 	path = lib/ld
 	url = https://github.com/natemago/libdraw.git
+[submodule "lib/di.js"]
+	path = lib/di.js
+	url = https://natemago@bitbucket.org/natemago/di.js.git
