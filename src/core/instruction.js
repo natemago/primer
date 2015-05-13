@@ -1,14 +1,23 @@
-(function($){
+def('risc.core.instruction', 
+    ['libDraw', 'jQuery'], 
+    function(libDraw, $){
     
-    /*
-    risc.core.Instruction = function(config){
-        this.init();
+    var Instruction = function(config){};
+    libDraw.ext(Instruction, {
+        getDecodeProcedure: function(){},
+        getOpcode: function(){},
+        decode: function(word){}
+    });
+    
+    
+    var InstructionSet = function(config){
+        
     };
     
-    libDraw.ext(risc.core.Instruction, {
-        init: function(){
-            
-        }
-    } );
-    */
-})(jQuery);
+    libDraw.ext(InstructionSet, {
+        addInstruction: function(name, procedure, opcode){}
+    });
+    
+    
+    
+});

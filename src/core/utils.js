@@ -3,6 +3,10 @@
    var __B64_ALPHABET = [
    ];
    
+   /** @module risc.utils */
+   /** 
+   * 
+   */
    var risc = {};
    
    risc.utils = {
