@@ -10,13 +10,13 @@ function(suite, instruction){
             var format = "1100 0011 {varA: 4} {varB:4} 1111 0000";
             log.info('Instruction specification: ', format);
             var fmt = new instruction.InstructionFormat(format);
-            log.debug('Format: ', fmt);
+            log.debug('Format: ', JSON.stringify(fmt, null, 2));
         });
         
         usecase('InstructionFormat-2','Parse format specs', function(ok, log){
             log.setLevel('trace');
             
-            var format = "1100 0018 {varA: 4} {varB:4} 1111 0000";
+            var format = "1100 0011 {varA: 4} {varB:4} 1111 0000";
             log.info('Instruction specification: ', format);
             var fmt = new instruction.InstructionFormat(format);
             log.debug('Format: ', fmt);

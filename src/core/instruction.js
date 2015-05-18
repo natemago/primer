@@ -90,6 +90,48 @@ function(libDraw, MacroProcessor, util, riscUtils){
         this.opcodeMaskHex = riscUtils.toHex(this.opcodeMask, 8);
     };
     
+    /*
+     * Assembly format for a single instructon.
+     * MNEMONIC <REGISTER>, {var_name:type}, [<REG>,{var}], {{<R>+<R>}}
+     
+     General syntax:
+      mnemonic_expression[reference_expression] [reference_expression|offset_expression|multireg_expression], ...
+      
+      mnemonic_expression: [\w_]+
+      reference_expression: register_expression|variable_expression
+      
+      register_expression: <[\w_]+>
+      variable_expression: {variable_name[:variable_type]}
+      variable_name: [\w_]+
+      variable_type: int|string|float
+      
+      offset_expression: \[reference_expression,...\]
+      multireg_expression: \{\{register_expression operand register_expression\}\}
+      operand: +|-|*|/|||&
+     
+     
+    Example:
+      instruction MOV:
+      
+      MOV <to_reg>, {{imm_value:int}}
+      ex: MOV R2, #3
+          MOV R0, #&C
+      
+      instruction BNE
+      
+      BNE <to_label:string>
+      ex: BNE start_of_loop
+      
+      instruction LDR
+      LDR <to_reg>, [<reg_a>, <reg_b>, {operation:string} {imm_value:int}]
+      ex: LDR R2, [R1, R2, LSL #0x3]
+       
+     */
+    var AssemblyFormat = function(spec){
+      
+    };
+    
+    
     return {
         InstructionFormat: InstructionFormat
     };
