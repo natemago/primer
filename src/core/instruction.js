@@ -127,13 +127,56 @@ function(libDraw, MacroProcessor, util, riscUtils){
       ex: LDR R2, [R1, R2, LSL #0x3]
        
      */
-    var AssemblyFormat = function(spec){
-      
+     
+     
+    var Lexer = function(termChars, str){
+        var pos = 0;
+        
+        this.nextToken = function(){
+            if(pos >= str.length){
+                return undefined;
+            }
+            var token = '';
+            var tc = '';
+            while(pos < str.length){
+                var c = str[pos];
+                if( termChars.indexOf(c) >= 0){
+                    pos++;
+                    tc = c;
+                    break;
+                }
+                token+=c;
+                pos++;
+            }
+            return [tc, token];
+        };
+    };
+    
+    Lexer.tokenize = function(string, tokenChars){
+        var tokens = [];
+        var token = undefined;
+        var lexer = new Lexer(tokenChars, string);
+        while(token = lexer.nextToken()){
+            tokens.push(token[1]);
+        }
+        return tokens;
     };
     
     
+    var AssemblyFormat = function(spec){
+        this.spec = spec;
+    };
+    
+    libDraw.ext(AssemblyFormat, {
+        parse: function(){
+            
+        }
+    });
+    
+    
     return {
-        InstructionFormat: InstructionFormat
+        InstructionFormat: InstructionFormat,
+        Lexer: Lexer
     };
     
 });
