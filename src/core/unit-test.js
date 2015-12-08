@@ -198,10 +198,16 @@ function($, libDraw, writer, errors, ui){
                     throw new errors.BaseError('Assert failed: ' + errorMessage);
                 }
             };
+            
+            var expect = function(expected, actual, message){
+                assert(expected == actual, 'Expected [' + expected + 
+                    '] but got [' + actual + '] instead. ' + (message || ''))
+            };
+            
             try{
-                this.setup.call(this.testContext, assert, this.log);
-                this.testCase.call(this.testContext, assert, this.log);
-                this.tearDown.call(this.testContext, assert, this.log);
+                this.setup.call(this.testContext, assert, this.log, expect);
+                this.testCase.call(this.testContext, assert, this.log, expect);
+                this.tearDown.call(this.testContext, assert, this.log, expect);
             }catch(e){
                 self.reportError(e.message, new errors.BaseError(e.message, e));
                 throw new errors.BaseError('Unexpected error: ' + e.message);

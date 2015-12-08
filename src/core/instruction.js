@@ -90,8 +90,93 @@ function(libDraw, MacroProcessor, util, riscUtils){
         this.opcodeMaskHex = riscUtils.toHex(this.opcodeMask, 8);
     };
     
+    /*
+     * Assembly format for a single instructon.
+     * MNEMONIC <REGISTER>, {var_name:type}, [<REG>,{var}], {{<R>+<R>}}
+     
+     General syntax:
+      mnemonic_expression[reference_expression] [reference_expression|offset_expression|multireg_expression], ...
+      
+      mnemonic_expression: [\w_]+
+      reference_expression: register_expression|variable_expression
+      
+      register_expression: <[\w_]+>
+      variable_expression: {variable_name[:variable_type]}
+      variable_name: [\w_]+
+      variable_type: int|string|float
+      
+      offset_expression: \[reference_expression,...\]
+      multireg_expression: \{\{register_expression operand register_expression\}\}
+      operand: +|-|*|/|||&
+     
+     
+    Example:
+      instruction MOV:
+      
+      MOV <to_reg>, {{imm_value:int}}
+      ex: MOV R2, #3
+          MOV R0, #&C
+      
+      instruction BNE
+      
+      BNE <to_label:string>
+      ex: BNE start_of_loop
+      
+      instruction LDR
+      LDR <to_reg>, [<reg_a>, <reg_b>, {operation:string} {imm_value:int}]
+      ex: LDR R2, [R1, R2, LSL #0x3]
+       
+     */
+     
+     
+    var Lexer = function(termChars, str){
+        var pos = 0;
+        
+        this.nextToken = function(){
+            if(pos >= str.length){
+                return undefined;
+            }
+            var token = '';
+            var tc = '';
+            while(pos < str.length){
+                var c = str[pos];
+                if( termChars.indexOf(c) >= 0){
+                    pos++;
+                    tc = c;
+                    break;
+                }
+                token+=c;
+                pos++;
+            }
+            return [tc, token];
+        };
+    };
+    
+    Lexer.tokenize = function(string, tokenChars){
+        var tokens = [];
+        var token = undefined;
+        var lexer = new Lexer(tokenChars, string);
+        while(token = lexer.nextToken()){
+            tokens.push(token[1]);
+        }
+        return tokens;
+    };
+    
+    
+    var AssemblyFormat = function(spec){
+        this.spec = spec;
+    };
+    
+    libDraw.ext(AssemblyFormat, {
+        parse: function(){
+            
+        }
+    });
+    
+    
     return {
-        InstructionFormat: InstructionFormat
+        InstructionFormat: InstructionFormat,
+        Lexer: Lexer
     };
     
 });
