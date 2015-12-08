@@ -281,7 +281,8 @@ function($, libDraw, writer, errors, ui){
         theSuite, commonSetup, commonTearDown, stopOnError);
     };
     
-    def('unit:test:suite', [], function(){ return defineSuite;});
+    def('unit:test:suite', [], function(){ return defineSuite; });
+    def('unit:test:runner',[], function(){ return __defaultRunner; });
     
     return {};
 });

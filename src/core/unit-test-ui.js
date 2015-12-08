@@ -1,5 +1,5 @@
-def('unit:ui', 
-['jQuery', 'libDraw'], 
+def('unit:ui',
+['jQuery', 'libDraw'],
 function($, libDraw){
 
     var DEFAULT_RULES = {
@@ -38,31 +38,75 @@ function($, libDraw){
             $(document.body).append(self.el);
         });
     };
-    
+
     libDraw.ext(TestsLog, {
         write: function(message, extraClass, extraStyle){
             $(this.el).append('<span class="tests-log-output '+
-                (extraClass || '' )+'" style="'+(extraStyle||'')+'">' + this.toHTML(message) 
-                + '</span>'); 
+                (extraClass || '' )+'" style="'+(extraStyle||'')+'">' + this.toHTML(message)
+                + '</span>');
         },
         writeLn: function(message, extraClass, extraStyle){
             $(this.el).append('<div class="tests-log-output tests-log-line '+
-                (extraClass || '' )+'" style="'+(extraStyle||'')+'">' + this.toHTML(message) 
+                (extraClass || '' )+'" style="'+(extraStyle||'')+'">' + this.toHTML(message)
                 + '</div>');
         },
         toHTML: function(str){
             return str.replace(/\n/gm, '<br />').replace(/\t/gm, '&nbsp;&nbsp;&nbsp;&nbsp;');
         }
     });
-    
-    
+
+
     var __testsLogWriter = new TestsLog({});
     def('unit:core:log-writer', [], function(){
         return __testsLogWriter;
     });
-    
+
+
+    var TestUI = function(config){
+      libDraw.ext(this, config);
+    };
+
+    libDraw.ext(TestUI, {
+      init: function(){
+        this.suites = {
+          inOrder: [],
+          all: {}
+        };
+      },
+      _renderSingleSuite: function(suite){
+        var markup = [
+          '<div class="test-suite-wrapper">',
+            '<div class="test-suite-header">',
+              '<div class="test-suite-title">',
+                '<div class="test-suite-name">',suite.name,'</div>',
+                '<div class="test-suite-desc">',suite.description,'</div>',
+              '</div>',
+              '<div class="test-suite-header-actions"></div>',
+            '</div>',
+            '<div class="unit-tests-list"></div>',
+          '</div>'
+        ].join('');
+        var suiteDef = {
+          el: $(markup)[0],
+          suite: suite
+        };
+        this.suites.inOrder.push(suiteDef);
+        this.suites.all[suite.name] = suiteDef;
+
+        libDraw.each(suite.tests.inOrder, function(test){
+          this._renderSingleTest(test, suiteDef);
+        }, this);
+
+      },
+
+      _renderSingleTest: function(test, suiteDef){
+
+      }
+    })
+
+
     return {
         TestsLog: TestsLog
     };
-    
+
 });
