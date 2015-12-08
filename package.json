@@ -1,0 +1,27 @@
+{
+  "name": "primer",
+  "version": "1.0.0",
+  "description": "Primer is a JavaScript RISC emulator ",
+  "main": "primer.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/natemago/primer.git"
+  },
+  "keywords": [
+    "processor",
+    "emulator",
+    "RISC"
+  ],
+  "author": "Pavle Jonoski",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/natemago/primer/issues"
+  },
+  "homepage": "https://github.com/natemago/primer#readme"
+}
