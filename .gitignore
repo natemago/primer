@@ -1,3 +1,5 @@
 .hg/*
 .hgtags
 *~
+node_modules
+bower_components
