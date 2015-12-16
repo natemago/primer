@@ -22,5 +22,8 @@
     "bower_components",
     "test",
     "tests"
-  ]
+  ],
+  "dependencies": {
+    "di.js": "https://bitbucket.org/natemago/di.js.git"
+  }
 }
