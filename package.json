@@ -23,5 +23,12 @@
   "bugs": {
     "url": "https://github.com/natemago/primer/issues"
   },
-  "homepage": "https://github.com/natemago/primer#readme"
+  "homepage": "https://github.com/natemago/primer#readme",
+  "dependencies": {
+    "gulp": "^3.9.0",
+    "require-dir": "^0.3.0"
+  },
+  "devDependencies": {
+    "gulp-sass": "^2.1.1"
+  }
 }
