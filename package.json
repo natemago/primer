@@ -25,12 +25,14 @@
   },
   "homepage": "https://github.com/natemago/primer#readme",
   "dependencies": {
-    "gulp": "^3.9.0",
-    "require-dir": "^0.3.0"
+    "gulp": "^3.9.0"
   },
   "devDependencies": {
+    "gulp-inject": "^3.0.0",
     "gulp-sass": "^2.1.1",
     "gulp-serve": "^1.2.0",
-    "gulp-task-listing": "^1.0.1"
+    "gulp-task-listing": "^1.0.1",
+    "main-bower-files": "^2.11.1",
+    "require-dir": "^0.3.0"
   }
 }
