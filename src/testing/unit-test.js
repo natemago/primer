@@ -1,12 +1,12 @@
 def('unit:test',
-['jQuery','libDraw', 'unit:core:log-writer', 'risc.core.error', 'unit:ui'], 
+['jQuery','libDraw', 'unit:core:log-writer', 'risc.core.error', 'unit:ui'],
 function($, libDraw, writer, errors, ui){
     // Logger
     var Logger = function(config){
         libDraw.ext(this, config);
         this.logLevel = this.logLevel || Logger.LEVELS['warning'];
     };
-    
+
     Logger.LEVELS = {
         "success": -1,
         "error": 0,
@@ -15,7 +15,7 @@ function($, libDraw, writer, errors, ui){
         "debug": 3,
         "trace": 4
     };
-    
+
     Logger.EXTRA_STYLE = {
         "0": "out-error",
         "2": "out-warn",
@@ -23,7 +23,7 @@ function($, libDraw, writer, errors, ui){
         "4": "out-trace",
         "-1": "out-success"
     };
-    
+
     libDraw.ext(Logger, {
         _log: function(message, level){
             if(this.logLevel >= level){
@@ -37,7 +37,7 @@ function($, libDraw, writer, errors, ui){
             this.logLevel = Logger.LEVELS[logLevel];
         }
     });
-    
+
     libDraw.each(Logger.LEVELS, function(value, level){
         var ex = {};
         ex[level] = function(){
@@ -46,7 +46,7 @@ function($, libDraw, writer, errors, ui){
         };
         libDraw.ext(Logger, ex);
     });
-    
+
     var TestRunner = function(config){
         libDraw.ext(this, config);
         this.suites = {
@@ -55,9 +55,9 @@ function($, libDraw, writer, errors, ui){
         };
         this.log = new Logger({});
     };
-    
+
     libDraw.ext(TestRunner, {
-        addSuite: function(suiteName, description, suite, 
+        addSuite: function(suiteName, description, suite,
             testSetup, testTeardown, stopOnError){
             var testSuite = new TestSuite({
                 name: suiteName,
@@ -67,7 +67,7 @@ function($, libDraw, writer, errors, ui){
                 stopOnError: stopOnError,
                 log: this.log
             });
-            var defineTest = function(testName, description, testCase, 
+            var defineTest = function(testName, description, testCase,
                 setup, tearDown, context){
                 testSuite.addTestCase(testName, description, testCase, setup,
                     tearDown, context);
@@ -101,7 +101,7 @@ function($, libDraw, writer, errors, ui){
             }, this);
         }
     });
-    
+
     var TestSuite = function(config){
         libDraw.ext(this, config);
         this.tests = {
@@ -110,9 +110,9 @@ function($, libDraw, writer, errors, ui){
         };
         this.report = new Report();
     };
-    
+
     libDraw.ext(TestSuite, {
-        addTestCase: function(testCaseName, description, testCase, 
+        addTestCase: function(testCaseName, description, testCase,
             setup, tearDown, context){
             var test = new TestCase({
                 name: testCaseName,
@@ -134,7 +134,7 @@ function($, libDraw, writer, errors, ui){
             try{
                 this._runTestWithReport(testCaseName, report, 1);
             }catch(e){
-                
+
             }
             this._printSummary(report);
             return report;
@@ -178,17 +178,17 @@ function($, libDraw, writer, errors, ui){
                     this._runTestWithReport(testName, report, cnt+1);
                 }, this);
             }catch(e){
-                
+
             }
             this._printSummary(report);
             return report;
         }
     });
-    
+
     var TestCase = function(config){
         libDraw.ext(this, config);
     };
-    
+
     libDraw.ext(TestCase, {
         run: function(){
             var self = this;
@@ -198,12 +198,12 @@ function($, libDraw, writer, errors, ui){
                     throw new errors.BaseError('Assert failed: ' + errorMessage);
                 }
             };
-            
+
             var expect = function(expected, actual, message){
-                assert(expected == actual, 'Expected [' + expected + 
+                assert(expected == actual, 'Expected [' + expected +
                     '] but got [' + actual + '] instead. ' + (message || ''))
             };
-            
+
             try{
                 this.setup.call(this.testContext, assert, this.log, expect);
                 this.testCase.call(this.testContext, assert, this.log, expect);
@@ -217,12 +217,12 @@ function($, libDraw, writer, errors, ui){
             this.log.error(errorMsg);
             if(err){
                 this.log.error('Error: ', err.message);
-                this.log.error('Stack trace: ', err.fullStackTrace ? 
+                this.log.error('Stack trace: ', err.fullStackTrace ?
                         err.fullStackTrace():err.stack);
             }
         }
     });
-    
+
     var Report = function(){
         this.tests = {};
         this.testsInOrder = [];
@@ -231,7 +231,7 @@ function($, libDraw, writer, errors, ui){
             failed: 0
         };
     };
-    
+
     libDraw.ext(Report, {
         _getTestStats: function(testName){
             if(!this.tests[testName]){
@@ -273,22 +273,28 @@ function($, libDraw, writer, errors, ui){
             };
         }
     });
-    
+
     // the default test runner and shortcuts
     var __defaultRunner = new TestRunner({
-        
+
     });
-    $(document).ready(function(){
-        __defaultRunner.runAll();
-    });
+    // $(document).ready(function(){
+    //     __defaultRunner.runAll();
+    // });
     var defineSuite = function(suiteName, description,
         theSuite, commonSetup, commonTearDown, stopOnError){
             __defaultRunner.addSuite(suiteName, description,
         theSuite, commonSetup, commonTearDown, stopOnError);
     };
-    
+
     def('unit:test:suite', [], function(){ return defineSuite; });
     def('unit:test:runner',[], function(){ return __defaultRunner; });
-    
-    return {};
+
+    return {
+      Logger: Logger,
+      TestRunner: TestRunner,
+      TestSuite: TestSuite,
+      TestCase: TestCase,
+      Report: Report
+    };
 });
