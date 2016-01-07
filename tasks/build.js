@@ -5,9 +5,19 @@ gulp.task('build:web', ['inject:web'], function(){
 
 });
 
-gulp.task('build:dev', ['clean:build', 'build:web'], function(){
-  gulp.src('./build/*')
-    .pipe(gulp.dest('./.serve-root'));
+gulp.task('build:dev', ['clean:build', 'clean:serve-root', 'build:web'], function(){
+  gulp.src('./build/web/*')
+    .pipe(gulp.dest('./.serve-root/web'));
   gulp.src('./bower_components')
-    .pipe(symlink('./.serve-root/bower_components'));
+    .pipe(symlink('./.serve-root/web/bower_components'));
 });
+
+gulp.task('build:tests', ['clean:build', 'clean:serve-root', 'inject:tests'], function(){
+  gulp.src('./build/tests/*')
+    .pipe(gulp.dest('./.serve-root/tests'));
+  gulp.src('./bower_components')
+    .pipe(symlink('./.serve-root/tests/bower_components'));
+});
+
+
+gulp.watch(['./tests/*.html', './tests/**/*.html', './tests/*.js', './tests/**/*.js'], ['build:tests']);
