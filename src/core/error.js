@@ -1,6 +1,6 @@
-def('risc.core.error', ['libDraw'],function(libDraw){
+def('risc.core.error', [':oop'],function(oop){
     var BaseError = function(message, cause){
-        libDraw.ext(this, new Error(message));
+        oop.ext(this, new Error(message));
         //this.stack = this.stack || '[N/A]';
         this.cause = cause;
         this.message = message;
@@ -8,9 +8,9 @@ def('risc.core.error', ['libDraw'],function(libDraw){
         //   this.stack += '\nCaused by:\n' + (cause.stack || '[N/A]');
         //}
     };
-    
-    libDraw.ext(BaseError, Error);
-    libDraw.ext(BaseError, {
+
+    oop.ext(BaseError, Error);
+    oop.ext(BaseError, {
         fullStackTrace: function(){
             if(this.cause){
                 if(this.cause.fullStackTrace){
@@ -22,7 +22,7 @@ def('risc.core.error', ['libDraw'],function(libDraw){
             return this.stack;
         }
     });
-    
+
     return {
         BaseError: BaseError
     };

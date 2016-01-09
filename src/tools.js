@@ -1,10 +1,11 @@
 (function(){
-  def(':$', function(){
+  def(':$', [], function(){
     return jQuery;
   });
-  def(':oop', function(){
+  def(':oop', [], function(){
     return {
-      extend: libDraw.ext
+      extend: libDraw.ext,
+      ext: libDraw.ext
     };
   })
 })();

@@ -24,8 +24,8 @@
     "tests"
   ],
   "dependencies": {
-    "primer-di": "https://natemago@bitbucket.org/natemago/primer-di.git",
     "libdraw": "https://github.com/natemago/libdraw.git",
-    "jquery": "~2.1.4"
+    "jquery": "~2.1.4",
+    "primer-di": "~1.0.0"
   }
 }

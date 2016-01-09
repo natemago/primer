@@ -1,9 +1,9 @@
 def('unit:test',
-['jQuery','libDraw', 'unit:core:log-writer', 'risc.core.error', 'unit:ui'],
-function($, libDraw, writer, errors, ui){
+[':oop', 'unit:core:log-writer', 'risc.core.error', 'utils:each'],
+function(oop, writer, errors, each){
     // Logger
     var Logger = function(config){
-        libDraw.ext(this, config);
+        oop.ext(this, config);
         this.logLevel = this.logLevel || Logger.LEVELS['warning'];
     };
 
@@ -24,7 +24,7 @@ function($, libDraw, writer, errors, ui){
         "-1": "out-success"
     };
 
-    libDraw.ext(Logger, {
+    oop.ext(Logger, {
         _log: function(message, level){
             if(this.logLevel >= level){
                 this._write(message, level);
@@ -38,17 +38,17 @@ function($, libDraw, writer, errors, ui){
         }
     });
 
-    libDraw.each(Logger.LEVELS, function(value, level){
+    each(Logger.LEVELS, function(value, level){
         var ex = {};
         ex[level] = function(){
             var message = Array.prototype.join.call(arguments, '');
             this._log(message, value);
         };
-        libDraw.ext(Logger, ex);
+        oop.ext(Logger, ex);
     });
 
     var TestRunner = function(config){
-        libDraw.ext(this, config);
+        oop.ext(this, config);
         this.suites = {
             inOrder: [],
             all: {}
@@ -56,7 +56,7 @@ function($, libDraw, writer, errors, ui){
         this.log = new Logger({});
     };
 
-    libDraw.ext(TestRunner, {
+    oop.ext(TestRunner, {
         addSuite: function(suiteName, description, suite,
             testSetup, testTeardown, stopOnError){
             var testSuite = new TestSuite({
@@ -96,14 +96,14 @@ function($, libDraw, writer, errors, ui){
             this.log.info('\n');
         },
         runAll: function(){
-            libDraw.each(this.suites.inOrder, function(suite){
+            each(this.suites.inOrder, function(suite){
                 this._runSuite(this.suites.all[suite]);
             }, this);
         }
     });
 
     var TestSuite = function(config){
-        libDraw.ext(this, config);
+        oop.ext(this, config);
         this.tests = {
             inOrder: [],
             all: {}
@@ -111,7 +111,7 @@ function($, libDraw, writer, errors, ui){
         this.report = new Report();
     };
 
-    libDraw.ext(TestSuite, {
+    oop.ext(TestSuite, {
         addTestCase: function(testCaseName, description, testCase,
             setup, tearDown, context){
             var test = new TestCase({
@@ -174,7 +174,7 @@ function($, libDraw, writer, errors, ui){
         runAll: function(){
             var report = new Report();
             try{
-                libDraw.each(this.tests.inOrder, function(testName, k, cnt){
+                each(this.tests.inOrder, function(testName, k, cnt){
                     this._runTestWithReport(testName, report, cnt+1);
                 }, this);
             }catch(e){
@@ -186,10 +186,10 @@ function($, libDraw, writer, errors, ui){
     });
 
     var TestCase = function(config){
-        libDraw.ext(this, config);
+        oop.ext(this, config);
     };
 
-    libDraw.ext(TestCase, {
+    oop.ext(TestCase, {
         run: function(){
             var self = this;
             var assert = function(value, errorMessage) {
@@ -232,7 +232,7 @@ function($, libDraw, writer, errors, ui){
         };
     };
 
-    libDraw.ext(Report, {
+    oop.ext(Report, {
         _getTestStats: function(testName){
             if(!this.tests[testName]){
                 this.tests[testName] = {
@@ -260,7 +260,7 @@ function($, libDraw, writer, errors, ui){
                 total: this.stats.passed+this.stats.failed,
                 details: (function(r){
                     var details = [];
-                    libDraw.each(r.testsInOrder, function(testName){
+                    each(r.testsInOrder, function(testName){
                         var err = r.tests[testName].error;
                         details.push({
                             passed: r.tests[testName].status,

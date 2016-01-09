@@ -1,6 +1,6 @@
 def('unit:ui',
-['jQuery', 'libDraw'],
-function($, libDraw){
+[':$', ':oop', 'utils:each'],
+function($, oop, each){
 
     var DEFAULT_RULES = {
         ".unit-tests-log": [
@@ -16,15 +16,15 @@ function($, libDraw){
     };
 
     var TestsLog = function(config){
-        libDraw.ext(this, config);
+        oop.ext(this, config);
         this.el = $(['<div class="unit-tests-log"></div>'].join(''))[0];
         var self = this;
         this.cssRules = {};
-        libDraw.ext(this.cssRules, DEFAULT_RULES);
-        libDraw.ext(this.cssRules, config.cssRules || {});
+        oop.ext(this.cssRules, DEFAULT_RULES);
+        oop.ext(this.cssRules, config.cssRules || {});
         $(document).ready(function(){
             var rules = [];
-            libDraw.each(self.cssRules, function(ruleBody, rule){
+            each(self.cssRules, function(ruleBody, rule){
                  rules.push([
                     rule, '{',
                     ruleBody,
@@ -39,7 +39,7 @@ function($, libDraw){
         });
     };
 
-    libDraw.ext(TestsLog, {
+    oop.ext(TestsLog, {
         write: function(message, extraClass, extraStyle){
             $(this.el).append('<span class="tests-log-output '+
                 (extraClass || '' )+'" style="'+(extraStyle||'')+'">' + this.toHTML(message)
@@ -63,10 +63,10 @@ function($, libDraw){
 
 
     var TestUI = function(config){
-      libDraw.ext(this, config);
+      oop.ext(this, config);
     };
 
-    libDraw.ext(TestUI, {
+    oop.ext(TestUI, {
       init: function(){
         this.suites = {
           inOrder: [],
@@ -93,7 +93,7 @@ function($, libDraw){
         this.suites.inOrder.push(suiteDef);
         this.suites.all[suite.name] = suiteDef;
 
-        libDraw.each(suite.tests.inOrder, function(test){
+        each(suite.tests.inOrder, function(test){
           this._renderSingleTest(test, suiteDef);
         }, this);
 
