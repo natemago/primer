@@ -153,9 +153,88 @@
 
       });
 
+      usecase('OOP mixins basic', 'Just add mixins', function(ok, log, expect){
+        var A = function(){};
+        var mixin1 = {
+          mixin1: function(){
+            return 'M1';
+          }
+        };
+        var mixin2 = {
+          mixin2: function(){
+            return 'M2';
+          }
+        };
+        var mixin3 = {
+          mixin3: function(){
+            return 'M3';
+          }
+        };
+        oop.extend(A, mixin1, mixin2, mixin3);
+
+        var a = new A();
+
+        ok(a.mixin1, 'Should have mixin 1');
+        expect(a.mixin1(), 'M1');
+
+        ok(a.mixin2, 'Should have mixin 2');
+        expect(a.mixin2(), 'M2');
+
+        ok(a.mixin3, 'Should have mixin 3');
+        expect(a.mixin3(), 'M3');
+
+      });
+
+      usecase('OOP mixins complex', 'More than 1 mixin and a superclass', function(ok, log, expect){
+        var SubClass = function(){};
+        var SuperClass = function(){};
+
+        oop.extend(SuperClass, {
+          superClassMethod: function(){
+            return 'SuperClass';
+          }
+        });
+
+        var MixinClass = function(){};
+        oop.extend(MixinClass, {
+          mixinClassMethod: function(){
+            return 'MixinClass';
+          }
+        });
+
+        oop.extend(SubClass, {
+          methodInSubClass: function(){
+            return 'SubClass';
+          }
+        }, SuperClass, {
+          mixin1: function(){
+            return 'mixin1';
+          }
+        }, {
+          mixin2: function(){
+            return 'mixin2';
+          }
+        }, MixinClass,{
+          mixin3: function(){
+            return 'mixin3';
+          }
+        });
+
+        var a = new SubClass();
+
+        ok(a instanceof SubClass, 'Should be SubClass instance');
+        ok(a instanceof SuperClass, 'Should be SuperClass instance')
+        ok(!(a instanceof MixinClass), 'Should not be instance of MixinClass');
+
+        ok(a.methodInSubClass, 'Should have its own methods');
+        ok(a.superClassMethod, 'Should have the super class methods');
+        ok(a.mixinClassMethod, 'Should have the mixin class methods');
+        ok(a.mixin1, 'Should have the inline mixin 1 methods');
+        ok(a.mixin2, 'Should have the inline mixin 2 methods');
+        ok(a.mixin3, 'Should have the inline mixin 3 methods');
+
+      });
+
     });
-
-
-
   });
 })();
