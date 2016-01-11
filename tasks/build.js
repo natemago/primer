@@ -13,6 +13,7 @@ gulp.task('build:dev', ['clean:build', 'clean:serve-root', 'build:web'], functio
 });
 
 gulp.task('build:tests', ['clean:build', 'clean:serve-root', 'inject:tests'], function(){
+  console.log('Should be injected and build under ./build/tests/index.html');
   gulp.src('./build/tests/*')
     .pipe(gulp.dest('./.serve-root/tests'));
   gulp.src('./bower_components')

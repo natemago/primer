@@ -40,6 +40,70 @@
 
       });
 
+      usecase('Inheritance - Opetimizations', 'Optimization tests', function(ok, log, expect){
+        var ClassA = function(){};
+
+        var ClassB = function(){};
+
+        ClassB.prototype = Object.create(ClassA.prototype);
+        ClassB.prototype.constructor = ClassB;
+
+        var objB = new ClassB();
+        ok(objB instanceof ClassB);
+        ok(objB instanceof ClassA);
+
+
+      });
+
+      usecase('Inheritance - Optimization - inherit methods', 'Optimization tests: inherit methods properly', function(ok, log, expect){
+        var mixin = function(a, b){
+          for(var p in b){
+            if(b.hasOwnProperty(p)){
+              a[p] = b[p];
+            }
+          }
+          return a;
+        };
+        var ClassA = function(){};
+
+        ClassA.prototype.method1 = function(){
+          return 'ClassA.method1';
+        };
+
+        ClassA.prototype.forOverride = function(){
+          return 'ClassA.forOverride';
+        };
+
+        var ClassB = function(){};
+        ClassB.prototype.method2 = function(){
+          return 'ClassB.method2';
+        };
+
+        ClassB.prototype.forOverride = function(){
+          return 'Override from class B';
+        };
+
+        var proto = Object.create(ClassA.prototype);
+        proto = mixin(proto, ClassB.prototype);
+        proto.constructor = ClassB;
+
+        ClassB.prototype = proto;
+
+        var objB = new ClassB();
+        ok(objB instanceof ClassB);
+        ok(objB instanceof ClassA);
+
+        ok(objB.method1);
+        expect(objB.method1(), 'ClassA.method1');
+
+        ok(objB.method2, 'Method missing');
+        ok(objB.method2(), 'ClassB.method2');
+
+        ok(objB.forOverride);
+        ok(objB.forOverride(), 'Override from class B')
+      });
+
+
     });
 
 

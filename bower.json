@@ -26,6 +26,6 @@
   "dependencies": {
     "libdraw": "https://github.com/natemago/libdraw.git",
     "jquery": "~2.1.4",
-    "primer-di": "~1.0.0"
+    "primer-di": "~1.1.0"
   }
 }
