@@ -1,7 +1,6 @@
 (function(){
 
   def('tools.test', ['unit:test:suite', ':$', ':oop'], function(suite, $, oop){
-    console.log('tools.test');
     suite('Primer Tools - OOP', 'Tests for the tools module - OOP utilities', function(usecase){
       usecase('Define class', 'Test define a class with methods', function(ok, log, expect){
         var ClassA = function(){};
@@ -103,8 +102,59 @@
         ok(objB.forOverride(), 'Override from class B')
       });
 
+      usecase('OOP Inheritance: inherit from class', 'Inherit from class and instanceof', function(ok, log, expect){
+        var A = function(){};
+        var B = function(){};
+
+        oop.extend(B, A);
+        var b = new B();
+
+        ok(b instanceof B, 'Should be instance of B');
+        ok(b instanceof A, 'Should be instance of A');
+        ok(b instanceof Object, 'Should be instance of Object');
+      });
+
+      usecase('OOP Inheritance: inherit methods and override', 'OOP Inheritance: inherit methods and override', function(ok, log, expect){
+        var A = function(){};
+        var B = function(){};
+
+        oop.extend(A, {
+          method: function(){
+            return 'A';
+          },
+          inherited: function(){
+            return 'A';
+          }
+        });
+
+        oop.extend(B, A,{
+          fromB: function(){
+            return 'B';
+          },
+          method: function(){
+            return 'B';
+          }
+        })
+
+        var b = new B();
+
+        ok(b instanceof B, 'Should be instance of B');
+        ok(b instanceof A, 'Should be instance of A');
+        ok(b instanceof Object, 'Should be instance of Object');
+
+        ok(b.fromB, 'Should have its own method');
+        expect(b.fromB(), 'B');
+
+        ok(b.inherited, 'Should have the inherited method');
+        expect(b.inherited(), 'A');
+
+        ok(b.method, 'Should have the overriden method');
+        expect(b.method(), 'B');
+
+      });
 
     });
+
 
 
   });

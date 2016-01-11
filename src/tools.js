@@ -21,9 +21,10 @@
   };
 
   var extendFromClass = function(classA, superClass){
+    var proto = merge(Object.create(superClass.prototype), classA.prototype);
+    proto.constructor = classA;
+    classA.prototype = proto;
     classA.superclass = superClass.prototype;
-    classA.prototype.__proto__ = superClass.prototype;
-    return classA;
   };
 
   var extend = function(){
