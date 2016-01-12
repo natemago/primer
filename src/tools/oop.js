@@ -1,5 +1,5 @@
 (function(){
-
+  
   var merge = function(a, b){
     for(var propName in b){
       if(b.hasOwnProperty(propName)){
@@ -47,13 +47,13 @@
     return first;
   };
 
-  def(':$', [], function(){
-    return jQuery;
-  });
-  def(':oop', [], function(){
+  def('oop', function(){
     return {
       extend: extend,
-      ext: extend
+      ext: extend,
+      merge: merge
     };
-  })
+  });
+
+
 })();
