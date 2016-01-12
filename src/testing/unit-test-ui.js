@@ -1,5 +1,5 @@
 def('unit:ui',
-[':$', ':oop', 'utils:each'],
+[':$', 'oop', 'utils:each'],
 function($, oop, each){
 
     var DEFAULT_RULES = {

@@ -1,4 +1,4 @@
-def('risc.core.error', [':oop'],function(oop){
+def('risc.core.error', ['oop'],function(oop){
     var BaseError = function(message, cause){
         oop.ext(this, new Error(message));
         //this.stack = this.stack || '[N/A]';

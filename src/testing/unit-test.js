@@ -1,5 +1,5 @@
 def('unit:test',
-[':oop', 'unit:core:log-writer', 'risc.core.error', 'utils:each'],
+['oop', 'unit:core:log-writer', 'risc.core.error', 'utils:each'],
 function(oop, writer, errors, each){
     // Logger
     var Logger = function(config){
