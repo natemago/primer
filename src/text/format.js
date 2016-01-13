@@ -6,6 +6,7 @@
       this.regex = /\{([^\{\}]+)\}/gm;
       this.lastIndex = 0;
       this.endOfText = false;
+      this.command = null;
     };
 
     oop.extend(Lexer, {
@@ -13,14 +14,26 @@
         if(this.endOfText){
           return null;
         }
+        if(this.command){
+          var val = this.command;
+          this.command = null;
+          return {
+            command: val
+          };
+        }
         var res = this.regex.exec(this.text);
         if(res){
           var command = res[1];
           var text = this.text.substring(this.lastIndex, this.regex.lastIndex-res[0].length);
           this.lastIndex = this.regex.lastIndex;
+          if(!text){
+            return {
+              command: command
+            }
+          }
+          this.command = command;
           return {
-            text: text,
-            command: command
+            text: text
           };
         }else{
           this.endOfText = true;

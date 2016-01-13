@@ -45,10 +45,15 @@
 
         var token = lexer.nextToken();
         ok(token);
-        ok(token.command);
+        ok(!token.command);
         ok(token.text);
-        expect(token.command, 'color:green');
         expect(token.text, 'start of line ');
+
+        token = lexer.nextToken();
+        ok(token);
+        ok(token.command);
+        ok(!token.text);
+        expect(token.command, 'color:green');
 
         token = lexer.nextToken();
         ok(token);
@@ -68,14 +73,78 @@
 
         var token = lexer.nextToken();
         ok(token);
-        ok(token.command);
+        ok(!token.command);
         ok(token.text);
-        expect(token.command, 'color:green');
         expect(token.text, 'start of line ');
+
+        token = lexer.nextToken();
+        ok(token);
+        ok(token.command);
+        ok(!token.text);
+        expect(token.command, 'color:green');
 
         token = lexer.nextToken();
         ok(!token);
         log.info('Token is none -> [', token, ']');
+      });
+
+      usecase('Parse tokens - multiple commands', 'Parse tokens', function(ok, log, expect){
+        var txt = 'This is {color:red} some {style:bold}red bold{/style} text{/color} without color.';
+        var lexer = new txtf.Lexer(txt);
+
+        var token = lexer.nextToken();
+        ok(token);
+        ok(token.text);
+        ok(!token.command);
+        expect(token.text, 'This is ');
+
+        token = lexer.nextToken();
+        ok(token);
+        ok(!token.text);
+        ok(token.command);
+        expect(token.command, 'color:red');
+
+        token = lexer.nextToken();
+        ok(token);
+        ok(token.text);
+        ok(!token.command);
+        expect(token.text, ' some ');
+
+        token = lexer.nextToken();
+        ok(token);
+        ok(!token.text);
+        ok(token.command);
+        expect(token.command, 'style:bold');
+
+        token = lexer.nextToken();
+        ok(token);
+        ok(token.text);
+        ok(!token.command);
+        expect(token.text, 'red bold');
+
+        token = lexer.nextToken();
+        ok(token);
+        ok(!token.text);
+        ok(token.command);
+        expect(token.command, '/style');
+
+        token = lexer.nextToken();
+        ok(token);
+        ok(token.text);
+        ok(!token.command);
+        expect(token.text, ' text');
+
+        token = lexer.nextToken();
+        ok(token);
+        ok(!token.text);
+        ok(token.command);
+        expect(token.command, '/color');
+
+        token = lexer.nextToken();
+        ok(token);
+        ok(token.text);
+        ok(!token.command);
+        expect(token.text, ' without color.');
       });
     });
   });
