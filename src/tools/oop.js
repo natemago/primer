@@ -55,13 +55,15 @@
        * If there are no other functions given as arguments, then all other orguments
        * are considered to be mixins. This case in general is as follows:
        * <code>
+       * <pre>
        * extend(SubClass:function, mixin:object [,mixin:object ...])
+       * </pre>
        * </code>
        * The properties (methods) of the mixins will be merged with the SubClass prototype
        * evaulating from left to right, meaning any methods that are present in the class itself
        * or in a mixin can be overwritten by another mixin to the right of it.
        * For example:
-       * <code>
+       * <code><pre>
        *  var SubClass = function(){};
        *  extend(SubClass, {
        *  	mixin1_method: function()
@@ -75,12 +77,12 @@
        *     // this method will be available in the final class
        *   }
        *  })
-       * </code>
+       * </pre></code>
        *
        *  If other functions are supplied to the extend
        *  function after the first class, then the first (left most after the first argument)
        *  will be considered as the super class for extend. The general synopsis is:
-       *  <code>
+       *  <code><pre>
        *  var SubClass = function(){};
        *  var SuperClass = function(){};
        *
@@ -89,10 +91,10 @@
        *  var obj = new SubClass();
        *  console.log(obj instanceof SubClass); // true
        *  console.log(obj instanceof SuperClass); // true
-       *  </code>
+       *  </pre></code>
        *  Or let's consider the following, a bit more complex example:
        *
-       * <code>
+       * <code><pre>
        * var SuperClass = function(){}; // constructor for the super class
        * extend(SuperClass, {
        *   superClassMethod: function(){}
@@ -109,13 +111,13 @@
        *
        * console.log(obj.superClassMethod !== undefined); // true, inherited from super class
        * console.log(obj.subClassMethod !== undefined); // true, from the sub class definition
-       * </code>
+       * </pre></code>
        *
        * When we extend a class with another class, a special property called <code>superclass</code> is
        * attached to the class itself. This points to the super class prototype, so we can easily access the
        * methods or properties available in the super class (or methods that we have overriden in the sub class).
        * For example, here is how we can call a super method from a child class:
-       * <code>
+       * <code><pre>
        * var A = function(){
        *   console.log('A constructor call');
        * };
@@ -148,7 +150,7 @@
        * // A.method() call with value: some value
        * // B.otherMethod() call
        *
-       * </code>
+       * </pre></code>
        * Note that when calling the super class methods, we do it by calling the
        * special method <code>Function.call()</code>. We do this to set the funcion
        * <code>this</code> to point to the proper object.
