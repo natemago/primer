@@ -205,9 +205,12 @@ function(oop, writer, errors, each){
             };
 
             try{
-                this.setup.call(this.testContext, assert, this.log, expect);
-                this.testCase.call(this.testContext, assert, this.log, expect);
-                this.tearDown.call(this.testContext, assert, this.log, expect);
+                var log = new Logger({
+                  logLevel: this.log ? this.log.logLevel: Logger.LEVELS['warning']
+                });
+                this.setup.call(this.testContext, assert, log, expect);
+                this.testCase.call(this.testContext, assert, log, expect);
+                this.tearDown.call(this.testContext, assert, log, expect);
             }catch(e){
                 self.reportError(e.message, new errors.BaseError(e.message, e));
                 throw new errors.BaseError('Unexpected error: ' + e.message);

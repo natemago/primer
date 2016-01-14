@@ -89,7 +89,7 @@ body {
     background: rgba(59, 59, 59, 0.9);
     color: #FFC500;*/
     color: #75b1f7;
-    
+
 }
 
 .main-description{
@@ -151,7 +151,7 @@ body {
 .button-primary:hover{
     color: #75b1f7;
     /*box-shadow: 0px 0px 10px 0px #75b1f7;*/
-    
+
 }
 
 
@@ -169,7 +169,7 @@ body {
 .button-secondary:hover{
     color: #181818;
     /*box-shadow: 0px 0px 10px 0px #181818;*/
-    
+
 }
 
 
@@ -198,7 +198,7 @@ body {
 .github-box a{
     color: #3b3b3b;
     text-decoration: underline;
-    
+
 }
 
 .center {
@@ -215,4 +215,39 @@ body {
 
 .watermark{
     padding: 20px;
+}
+
+
+.unit-tests-log{
+  margin: 50px;
+  padding: 3px;
+  background: white;
+}
+
+.tests-log-line {
+  padding: 2px;
+  padding-left: 5px;
+  margin-top: 2px;
+  border-left: solid 3px #AAA;
+  background: #FAFAFA;
+}
+
+.tests-log-line.out-success{
+  border-left: solid 3px #AFA;
+}
+
+.tests-log-line.out-error{
+  border-left: solid 3px #FAA;
+}
+
+.tests-log-line.out-warn{
+  border-left: solid 3px #FDA;
+}
+
+.tests-log-line.out-debug{
+  border-left: solid 3px #ADF;
+}
+
+.tests-log-line.out-trace{
+  border-left: solid 3px #AFF;
 }

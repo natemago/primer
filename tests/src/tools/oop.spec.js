@@ -1,7 +1,7 @@
 (function(){
 
   def('tools.test', ['unit:test:suite', ':$', 'oop'], function(suite, $, oop){
-    
+
     suite('Primer Tools - OOP', 'Tests for the tools module - OOP utilities', function(usecase){
       usecase('Define class', 'Test define a class with methods', function(ok, log, expect){
         var ClassA = function(){};
