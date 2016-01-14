@@ -1,5 +1,5 @@
 (function(){
-  def('text.format.tests',['unit:test:suite', 'text.format'], function(suite, txtf){
+  def('text.format.tests',['unit:test:suite', 'text.format', 'utils:each'], function(suite, txtf, each){
     suite('Research tests','', function(usecase){
       usecase('Research directive regex', '', function(ok, log, expect){
         var sampleFormattedText = 'Th{}is}{ is {color:red}red text{/color} { ssss{}s';
@@ -145,6 +145,58 @@
         ok(token.text);
         ok(!token.command);
         expect(token.text, ' without color.');
+      });
+    });
+
+    suite('Parser', 'Text format parser', function(usecase){
+      usecase('Parse text into standard format', 'Parse text to standard format', function(ok, log, expect){
+        var expectObj = function(obj, expected, inObject){
+          ok(obj !== null && expected !== null, 'Expected non null object');
+          ok(obj !== undefined && expected !== undefined, 'Expected a defined object');
+          each(obj, function(val, prop){
+            if(typeof(val) == 'object'){
+              expectObj(val, expected[prop] || {}, (inObject ? (inObject + '.' + prop) : prop ));
+            }else{
+              expect(val, expected[prop], 'For property ['+prop+']' + (inObject ? (' in object ' + inObject) : '') + '.');
+            }
+          });
+        };
+        var txt = 'This is {color:red} some {style:bold}red bold{/style} text{/color} without color.';
+        var parser = new txtf.Parser();
+        var result = parser.parseText(txt);
+        console.log(result);
+
+        ok(result);
+        expect(result.length, 5, 'Number of tokens');
+
+        expectObj({
+          text: 'This is ',
+          format: {}
+        }, result[0]);
+        expectObj({
+          text: ' some ',
+          format: {
+            color: 'red'
+          }
+        }, result[1]);
+        expectObj({
+          text: 'red bold',
+          format: {
+            color: 'red',
+            style: 'bold'
+          }
+        }, result[2]);
+
+        expectObj({
+          text: ' text',
+          format: {
+            color: 'red'
+          }
+        }, result[3]);
+
+        expectObj({
+          text: ' without color.'
+        }, result[4]);
       });
     });
   });
