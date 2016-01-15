@@ -111,6 +111,9 @@
 
         return parsed;
       },
+      parse: function(){
+        return this.parseText(Array.prototype.join.call(arguments, ''));
+      },
       parseCommand: function(cmd){
         var regex = /\/?([^:]+)\s*:?\s*(.*)/g;
         var res = regex.exec(cmd);

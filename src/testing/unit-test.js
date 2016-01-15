@@ -200,9 +200,32 @@ function(oop, writer, errors, each){
             };
 
             var expect = function(expected, actual, message){
-                assert(expected == actual, 'Expected [' + expected +
-                    '] but got [' + actual + '] instead. ' + (message || ''))
+                assertArbitrary(expected, actual, '', message);
             };
+
+            var assertArbitrary = function(expected, actual, objName, message){
+              var objName = objName || '';
+              if(expected instanceof Array){
+                for(var i = 0; i < expected.length; i++){
+                  assertArbitrary(expected[i], actual[i], objName + '[' + i + ']', message);
+                }
+              } else if(typeof(expected) == 'object'){
+                each(expected, function(value, property){
+                  if(objName){
+                    property = objName + "." + property;
+                  }
+                  assertArbitrary(value, actual[property], property, message);
+                });
+              } else {
+                var message = message || '';
+                if(objName){
+                  message = (message ? message + ' | ': '') + 'For ' + objName + ': ';
+                }
+                message += 'Expected [' + expected + '], but got [' + actual + '] instead.';
+                assert(expected == actual, message);
+              }
+            };
+
 
             try{
                 var log = new Logger({
