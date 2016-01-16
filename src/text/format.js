@@ -146,6 +146,11 @@
       }
     });
 
+    var parseRichText = function(){
+      var parser = new Parser();
+      return parser.parse.apply(parser, arguments);
+    };
+
 
     var formatText = function(text, args){
       var fmtRegex = /\{\}/gmi;

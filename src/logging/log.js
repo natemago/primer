@@ -1,5 +1,5 @@
 (function(){
-  def('logging.log', ['oop', 'utils:each'], function(oop, each){
+  def('logging.log', ['oop', 'utils:each', 'text.format'], function(oop, each, format){
     // Logger
     var Logger = function(config){
         oop.ext(this, config);
@@ -15,14 +15,6 @@
         "trace": 4
     };
 
-    Logger.EXTRA_STYLE = {
-        "0": "out-error",
-        "2": "out-warn",
-        "3": "out-debug",
-        "4": "out-trace",
-        "-1": "out-success"
-    };
-
     oop.ext(Logger, {
         _log: function(message, level){
             if(this.logLevel >= level){
@@ -30,7 +22,7 @@
             }
         },
         _write: function(message, level){
-            writer.writeLn(message, Logger.EXTRA_STYLE[level]);
+            writer.writeLn(format.parseRichText('{logLevel:' + level + '}', message, '{/logLevel}'));
         },
         setLevel: function(logLevel){
             this.logLevel = Logger.LEVELS[logLevel];
