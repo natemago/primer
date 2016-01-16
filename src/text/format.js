@@ -146,9 +146,46 @@
       }
     });
 
+
+    var formatText = function(text, args){
+      var fmtRegex = /\{\}/gmi;
+      var fmtText = '';
+      var mText = null;
+      var i = 0;
+      var lastIndex = 0;
+      while(true){
+        var match = fmtRegex.exec(text);
+        if(!match){
+          if(lastIndex < text.length){
+            fmtText += text.substring(lastIndex, text.length);
+          }
+          break;
+        }
+
+        var replacement = args[i];
+        if(replacement === undefined){
+          replacement = '';
+        }
+
+        mText = text.substring(lastIndex, fmtRegex.lastIndex - 2);
+        mText += replacement;
+        fmtText += mText;
+        lastIndex = fmtRegex.lastIndex;
+        i++;
+      }
+      return fmtText;
+    };
+
+    var format = function(){
+      var text = arguments[0];
+      var args = Array.prototype.slice.call(arguments, 1);
+      return formatText(text, args);
+    };
+
     return {
       Lexer: Lexer,
-      Parser: Parser
+      Parser: Parser,
+      format: format
     };
   });
 

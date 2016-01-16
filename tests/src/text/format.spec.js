@@ -199,5 +199,33 @@
         }, result[4]);
       });
     });
+
+    suite('Text format', 'format', function(usecase){
+      usecase('Format text', 'format text', function(ok, log, expect){
+        var result = txtf.format('This {} is some {} {}', 'text', 'formatted', 'string');
+        expect('This text is some formatted string', result);
+        log.info('Format result: ', result);
+      });
+
+      usecase('Start with format', '', function(ok, log, expect){
+        var result = txtf.format('{} World!', 'Hello');
+        expect('Hello World!', result);
+      });
+
+      usecase('End on format', '', function(ok, log, expect){
+        var result = txtf.format('Hello {}', 'World!');
+        expect('Hello World!', result);
+      });
+
+      usecase('Format in the middle', '', function(ok, log, expect){
+        var result = txtf.format('Middle {} text', 'format');
+        expect('Middle format text', result);
+      });
+
+      usecase('Missing argument', '', function(ok, log, expect){
+        var result = txtf.format('This is {}, but this [{}] is not.', 'replaced');
+        expect('This is replaced, but this [] is not.', result);
+      });
+    });
   });
 })();
