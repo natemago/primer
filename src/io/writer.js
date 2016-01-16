@@ -23,6 +23,9 @@
           }
         }
       },
+      toProperEntry: function(arg){
+
+      },
       writeLn: function(){
         this.write.apply(this, arguments);
         this.write('\n');
