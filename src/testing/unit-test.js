@@ -72,7 +72,13 @@ function(oop, writer, errors, each){
                 testSuite.addTestCase(testName, description, testCase, setup,
                     tearDown, context);
             };
-            suite.call(testSuite, defineTest);
+            suite.call(testSuite, function(){
+              if(typeof(arguments[1]) == 'function'){
+                defineTest.apply(this, [arguments[0], ''].concat( Array.prototype.slice.call(arguments, 1) ));
+              }else{
+                defineTest.apply(this, arguments);
+              }
+            });
             this.suites.inOrder.push(suiteName);
             this.suites.all[suiteName] = testSuite;
         },
@@ -310,10 +316,18 @@ function(oop, writer, errors, each){
     var defineSuite = function(suiteName, description,
         theSuite, commonSetup, commonTearDown, stopOnError){
             __defaultRunner.addSuite(suiteName, description,
-        theSuite, commonSetup, commonTearDown, stopOnError);
+              theSuite, commonSetup, commonTearDown, stopOnError);
     };
 
-    def('unit:test:suite', [], function(){ return defineSuite; });
+    def('unit:test:suite', [], function(){
+      return function(){
+        if(typeof(arguments[1]) == 'function'){
+          defineSuite.apply(this, [arguments[0], ''].concat( Array.prototype.slice.call(arguments, 1) ) );
+        }else{
+          defineSuite.apply(this, arguments);
+        }
+      };
+    });
     def('unit:test:runner',[], function(){ return __defaultRunner; });
 
     return {
