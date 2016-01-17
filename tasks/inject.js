@@ -20,7 +20,7 @@ gulp.task('inject:web', ['sass'], function(){
 
 
 gulp.task('inject:tests', ['sass'], function(){
-  gulp.src(['./tests/index.html'])
+  gulp.src(['./tests/*.html', './tests/**/*.html'])
     // inject bower main files (if exposed)
     .pipe(inject(gulp.src(bowerFiles(), {read: false}), {name: 'bower'}))
     // inject vendor lib files
