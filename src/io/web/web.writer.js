@@ -52,12 +52,18 @@
         return style;
       },
       escape: function(txt){
-        return txt;
+        return txt
+          .replace(/\n/gim,'<br/>')
+          .replace(/\t/gim, '&nbsp;&nbsp;&nbsp;&nbsp;');
       },
       transformToHtml: function(txt, style){
         return fmt.format('<span class="{}" style="{}">{}</span>', style.classes.join(' '), style.style, txt);
       }
     });
+
+    return {
+      WebWriter: WebWriter
+    };
 
   });
 })();
