@@ -47,6 +47,12 @@ function(oop, writer, errors, each){
         oop.ext(Logger, ex);
     });
 
+    /**
+     * TestRunner class.
+     *
+     * Runs a sutes of unit tests.
+     * @param  {Object} config configuration object
+     */
     var TestRunner = function(config){
         oop.ext(this, config);
         this.suites = {
@@ -57,6 +63,22 @@ function(oop, writer, errors, each){
     };
 
     oop.ext(TestRunner, {
+       /**
+        * Adds new unit tests suite to the test runner.
+        *
+        * Each suite must have a name and a definition.
+        * Optionally you might provide a description for the suite.
+        *
+        * The runner will run the definition of the suite to allow the definition
+        * of the unit tests. 
+        * @param  {[type]} suiteName    [description]
+        * @param  {[type]} description  [description]
+        * @param  {[type]} suite        [description]
+        * @param  {[type]} testSetup    [description]
+        * @param  {[type]} testTeardown [description]
+        * @param  {[type]} stopOnError  [description]
+        * @return {[type]}              [description]
+        */
         addSuite: function(suiteName, description, suite,
             testSetup, testTeardown, stopOnError){
             var testSuite = new TestSuite({
