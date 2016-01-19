@@ -1,5 +1,5 @@
 (function(){
-  def('ui.components', [':$', 'oop'], function($, oop){
+  def('ui.components', [':$', 'oop', 'ui.template', 'ui.linker'], function($, oop, template, linker){
     var UIComponent = function(config){
       oop.extend(this, config);
     };
