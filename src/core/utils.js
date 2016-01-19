@@ -2,17 +2,17 @@
    var __HEX = ['0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'];
    var __B64_ALPHABET = [
    ];
-   
+
    /** @module risc.utils */
-   /** 
-   * 
+   /**
+   *
    */
    var risc = {};
-   
+
    risc.utils = {
-      
+
       bToHex: function(b){
-         return __HEX[(b>>4)&0xF] + 
+         return __HEX[(b>>4)&0xF] +
             __HEX[b&0xF];
       },
       hwToHex: function(halfWord){
@@ -73,11 +73,11 @@
             toHex = risc.utils.hwToHex;
          else if (align == 1)
             toHex = risc.utils.bToHex;
-            
+
          for(var i = start; i < end; i++){
             ret.push(i+'. ' + toHex(mem[i]));
          }
-         
+
          return ret;
       },
       toByteArray: function(strAscii){
@@ -139,7 +139,7 @@
             var index = risc.utils.b64.VARIANTS_INDEX[variant];
             if(!index){
                 index = risc.utils.b64.VARIANTS_INDEX[variant] = {};
-                
+
                 var alphabet = risc.utils.b64.VARIANTS[variant].alphabet;
                 for(var i = 0; i < alphabet.length; i++){
                     index[alphabet[i]]=i;
@@ -153,7 +153,7 @@
 
         byte 1                   byte 2                  byte 3
         [ 7 6 5 4 3 2     1 0 ] [ 7 6 5 4     3 2 1 0 ] [ 7 6     5 4 3 2 1 0 ]
-        [ 5 4 3 2 1 0 ] [ 5 4     3 2 1 0 ] [ 5 4 3 2     1 0 ] [ 5 4 3 2 1 0 ] 
+        [ 5 4 3 2 1 0 ] [ 5 4     3 2 1 0 ] [ 5 4 3 2     1 0 ] [ 5 4 3 2 1 0 ]
         c1               c2                  c3                  c4
          */
          encode: function(barr, variant){ // encode byte array
@@ -181,29 +181,29 @@
                     lines.push(line);
                     line = '';
                 }
-                line+=(alphabet[c1]+alphabet[c2]+alphabet[c3]+alphabet[c4]);      
+                line+=(alphabet[c1]+alphabet[c2]+alphabet[c3]+alphabet[c4]);
                 i+=3;
             }while(i < barr.length);
-            
+
             if( (barr.length % 3) != 0 ){
                 line = line.substring(0, line.length -padding);
                 line += (padding == 2 ? padChar+padChar : padChar);
             }
-            
+
             if(line.length){
                 lines.push(line);
             }
-            
+
             return lines.join(newLine);
          },
          decode: function(str, variant, lineSeparator){
             variant = variant || 'mime';
             var padChar = risc.utils.b64.VARIANTS[variant].padding;
             var alphabet = risc.utils.b64.VARIANTS[variant].alphabet;
-            lineSeparator = lineSeparator || 
+            lineSeparator = lineSeparator ||
                 risc.utils.b64.VARIANTS[variant].lineSeparator;
-                
-                
+
+
             str = str.split(lineSeparator).join('');
             var barr = [];
             if( (str.length % 4) != 0 ){
@@ -211,16 +211,16 @@
             }
             var index = risc.utils.b64.getIndex(variant);
             for(var i = 0; i < str.length; i+=4){
-                
+
                 var c1 = index[str[i]];
                 var c2 = index[str[i + 1]];
                 var c3 = index[str[i + 2]];
                 var c4 = index[str[i + 3]];
-                
+
                 barr.push( (c1<<2) | (c2>>4) );             // byte 1
                 barr.push( ((c2&0xF)<<4) | ((c3>>2)&0xF) ); // byte 2
                 barr.push( ( (c3&0x3)<<6 ) | (c4&0x3F) );   // byte 3
-                
+
             }
             var paddCount = 0;
             if(str[str.length-1] == padChar) paddCount++;
@@ -230,7 +230,7 @@
             }
             return barr;
          }
-         
+
       },
       str: {
         trim: function(str){
@@ -243,14 +243,23 @@
            }
            return str;
        }
-      }
+     },
+     UUID: {
+       randomUUID: function(){
+         // FIXME: The implementation is bad and slow.
+         return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+           var r = crypto.getRandomValues(new Uint8Array(1))[0]%16|0, v = c == 'x' ? r : (r&0x3|0x8);
+           return v.toString(16);
+         });
+       }
+     }
    };
-   
+
    def('risc.utils', ['utils:each'], function(each){
         each(risc.utils, function(utility, name){
             def('risc.utils.' + name, [], function() { return utility; } );
         });
         return risc.utils;
    });
-   
+
 })();
