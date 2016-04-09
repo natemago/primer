@@ -8,23 +8,58 @@
 
 html {
 	font: 125%/1.5 Helvetica Neue, Helvetica, Arial, sans-serif;
+	position: relative;
+    min-height: 100%;
+}
+
+body {
+    margin: 0 0 100px;
 }
 
 header {
-    
+    height: 50px;
+    background: #000;
 }
 
 
 footer{
-    
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    height: 100px;
+    width: 100%;
+    background: #3b3b3b;
+    color: #b3b3b3;
+    padding: 10px;
+    text-align: center;
 }
 
-footer a{
-    
+.header-menu{
+    height: 50px;
+    text-align: right;
 }
 
-body {
-    
+.menu-entry{
+    color: #75b1f7;
+    padding: 10px;
 }
 
 
+.main-display {
+    background: url('../images/footer_lodyas.png');
+    height: 250px;
+}
+
+.about {
+    height: 250px;
+}
+
+/* helper classes */
+
+.pull-left{
+    float: left;
+}
+
+.pull-right{
+    float: right;
+}
