@@ -4,6 +4,12 @@
  black(ish): #181818
  gray: #3b3b3b
  light-gray: #b3b3b3;
+ 
+ red: #C92020
+ blue(medium): #798EE0
+ grey: #636162
+ grey light: #CDD3E9
+ blue light: #88C6C9
 */
 
 html {
@@ -14,11 +20,16 @@ html {
 
 body {
     margin: 0 0 100px;
+    background: #CDD3E9;
 }
 
 header {
     height: 50px;
     background: #000;
+    border-top: solid 4px #3b3b3b;
+    width: 100%;
+    margin: 0px;
+    padding: 0px;
 }
 
 
@@ -35,19 +46,54 @@ footer{
 }
 
 .header-menu{
-    height: 50px;
-    text-align: right;
+    height: 46px;
+    width: 90px;
+}
+
+.header-menu .brand-logo {
+    /*background: #3b3b3b;*/
+    height: 46px;
+    display: inline-block;
+    padding: 3px;
+    padding-top: 0px;
+}
+
+.brand-logo img.brand {
+    margin-top: 4px;
+    height: 36px;
+    width: 36px;
 }
 
 .menu-entry{
-    color: #75b1f7;
-    padding: 10px;
+    text-align: center;
+    height: 46px;
+    color: #3b3b3b;
+    padding-top: 3px;
+}
+
+.menu-wrapper {
+    margin-left: 100px;
+}
+
+.menu-entry:hover{
+    background: #3b3b3b;
+    color: #000;
 }
 
 
 .main-display {
-    background: url('../images/footer_lodyas.png');
-    height: 250px;
+    /*background: url('../images/simple_dashed.png');*/
+    background: url('../images/twinkle_twinkle.png');
+    /*background: url('../images/footer_lodyas.png');*/
+    text-align: center;
+    color: #CDD3E9;
+    padding-top: 40px;
+    padding-bottom: 40px;
+}
+
+.main-display img.logo {
+    width: 200px;
+    height: 200px;
 }
 
 .about {
@@ -63,3 +109,37 @@ footer{
 .pull-right{
     float: right;
 }
+
+.txt-large {
+    font-size: 1.5em;
+}
+
+.txt-larger {
+    font-size: 2.1em;
+}
+
+.button {
+    padding: 15px;
+    border-radius: 5px;
+    display: inline-block;
+    cursor: pointer;
+}
+
+.button.primary {
+    background: #3b3b3b;
+    color: #b3b3b3;
+}
+
+.button.primary:hover {
+    background: #C92020;
+    color: #000;
+}
+
+.main-content{
+    margin-bottom: 20px;
+}
+
+.main-content-final{
+    margin-bottom: 40px;
+}
+
